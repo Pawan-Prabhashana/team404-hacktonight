@@ -75,7 +75,8 @@ export function analyzeBillRadar(
     if (list.length < 2) continue
 
     const sorted = [...list].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
     const latest = sorted[0]
     const total = sorted.reduce((s, p) => s + p.amountMinorUnits, 0)

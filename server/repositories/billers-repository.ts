@@ -54,7 +54,9 @@ export async function listActiveBillers(input?: {
 
   if (input?.search) {
     params.push(`%${input.search}%`)
-    clauses.push(`(name ILIKE $${params.length} OR provider_code ILIKE $${params.length})`)
+    clauses.push(
+      `(name ILIKE $${params.length} OR provider_code ILIKE $${params.length})`
+    )
   }
 
   const result = await query<BillerRow>(

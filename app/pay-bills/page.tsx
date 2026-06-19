@@ -393,8 +393,8 @@ export default function PayBillsPage() {
             >
               Balance impact warning: paying your recurring bills (~
               {radar.totalMonthlyDisplay}) would leave{' '}
-              {selectedAccount?.nickname || 'this account'} running low. Consider
-              topping up first.
+              {selectedAccount?.nickname || 'this account'} running low.
+              Consider topping up first.
             </div>
           )}
         </div>
@@ -467,14 +467,16 @@ export default function PayBillsPage() {
                       transition: 'all 0.15s'
                     }}
                     onMouseEnter={(e) => {
-                      ;(e.currentTarget as HTMLButtonElement).style.borderColor =
-                        '#0d9488'
+                      ;(
+                        e.currentTarget as HTMLButtonElement
+                      ).style.borderColor = '#0d9488'
                       ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
                         '0 4px 14px rgba(8,127,122,0.1)'
                     }}
                     onMouseLeave={(e) => {
-                      ;(e.currentTarget as HTMLButtonElement).style.borderColor =
-                        '#e7edf1'
+                      ;(
+                        e.currentTarget as HTMLButtonElement
+                      ).style.borderColor = '#e7edf1'
                       ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
                         'none'
                     }}
@@ -674,8 +676,8 @@ export default function PayBillsPage() {
                   >
                     {accounts.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.nickname || a.accountName} · {a.accountNumberMasked} ·{' '}
-                        {a.balanceDisplay}
+                        {a.nickname || a.accountName} · {a.accountNumberMasked}{' '}
+                        · {a.balanceDisplay}
                         {a.status !== 'active' ? ' (frozen)' : ''}
                       </option>
                     ))}
@@ -847,8 +849,8 @@ export default function PayBillsPage() {
                   lineHeight: 1.6
                 }}
               >
-                Funds are deducted from your account in real time and recorded in
-                the ledger. Duplicate submissions are blocked automatically.
+                Funds are deducted from your account in real time and recorded
+                in the ledger. Duplicate submissions are blocked automatically.
               </p>
             </div>
           </div>

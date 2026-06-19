@@ -86,8 +86,14 @@ export async function POST(request: Request) {
       return badRequest(parsed.error ?? 'Validation error.')
     }
 
-    const { accountId, billerId, billReference, amount, currency, idempotencyKey } =
-      parsed.data
+    const {
+      accountId,
+      billerId,
+      billReference,
+      amount,
+      currency,
+      idempotencyKey
+    } = parsed.data
 
     // Convert amount to minor units
     let amountMinorUnits: number

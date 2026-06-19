@@ -295,7 +295,8 @@ export default function Dashboard() {
   })
   const currency = accounts[0]?.currency ?? 'LKR'
   const unread = notifications.filter((n) => !n.readAt).length
-  const name = user?.fullName?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
+  const name =
+    user?.fullName?.split(' ')[0] || user?.email?.split('@')[0] || 'there'
   const greeting = (() => {
     const h = new Date().getHours()
     return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
@@ -691,12 +692,13 @@ export default function Dashboard() {
                           {b.billerName}
                         </p>
                         <p style={{ fontSize: '0.7rem', color: '#6b7a90' }}>
-                          {new Date(
-                            b.paidAt ?? b.createdAt
-                          ).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short'
-                          })}{' '}
+                          {new Date(b.paidAt ?? b.createdAt).toLocaleDateString(
+                            'en-GB',
+                            {
+                              day: '2-digit',
+                              month: 'short'
+                            }
+                          )}{' '}
                           · Ref {b.billReference}
                         </p>
                       </div>

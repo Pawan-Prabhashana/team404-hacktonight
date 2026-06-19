@@ -299,7 +299,9 @@ export async function fetchBillers(params?: {
   if (params?.category) qs.set('category', params.category)
   if (params?.search) qs.set('search', params.search)
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
-  const data = await apiFetch<{ billers: SafeBiller[] }>(`/api/billers${suffix}`)
+  const data = await apiFetch<{ billers: SafeBiller[] }>(
+    `/api/billers${suffix}`
+  )
   return data.billers
 }
 
@@ -316,7 +318,8 @@ export async function fetchBillPayments(params?: {
   const qs = new URLSearchParams()
   if (params?.accountId !== undefined)
     qs.set('accountId', String(params.accountId))
-  if (params?.billerId !== undefined) qs.set('billerId', String(params.billerId))
+  if (params?.billerId !== undefined)
+    qs.set('billerId', String(params.billerId))
   if (params?.status) qs.set('status', params.status)
   if (params?.limit !== undefined) qs.set('limit', String(params.limit))
   if (params?.offset !== undefined) qs.set('offset', String(params.offset))
