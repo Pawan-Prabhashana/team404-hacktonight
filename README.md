@@ -1,4 +1,4 @@
-# HTN26 Challenge — Serandib Bank
+# Hacktonight Challenge — Serandib Bank
 
 > **Warning:** This project is a hackathon demo. Do not deploy as a real banking platform.
 
