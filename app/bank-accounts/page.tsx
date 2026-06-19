@@ -152,7 +152,11 @@ function AccountCard({ account }: { account: SafeAccount }) {
                 marginBottom: '0.375rem'
               }}
             >
-              {account.accountName?.includes('Savings') ? 'Savings Account' : account.accountName?.includes('Expense') ? 'Expense Account' : 'Account'}
+              {account.accountName?.includes('Savings')
+                ? 'Savings Account'
+                : account.accountName?.includes('Expense')
+                  ? 'Expense Account'
+                  : 'Account'}
             </p>
             <p
               style={{
