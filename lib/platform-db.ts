@@ -203,6 +203,73 @@ CREATE TABLE IF NOT EXISTS budgets (
   UNIQUE(user_id, category_slug, period)
 );
 CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
+
+-- Phase 9: Invisible Savings — partner merchants
+CREATE TABLE IF NOT EXISTS partner_merchants (
+  id                      SERIAL      PRIMARY KEY,
+  name                    TEXT        NOT NULL UNIQUE,
+  slug                    TEXT        NOT NULL UNIQUE,
+  category                TEXT        NOT NULL DEFAULT 'food_and_dining',
+  logo_url                TEXT,
+  status                  TEXT        NOT NULL DEFAULT 'active',
+  min_roundup_minor_units BIGINT      NOT NULL DEFAULT 2000,
+  max_roundup_minor_units BIGINT      NOT NULL DEFAULT 5000,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_partner_merchants_status ON partner_merchants(status);
+
+-- Phase 9: per-user invisible savings settings
+CREATE TABLE IF NOT EXISTS invisible_savings_settings (
+  id                      SERIAL      PRIMARY KEY,
+  user_id                 INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  source_account_id       INTEGER     NOT NULL REFERENCES accounts(id),
+  destination_account_id  INTEGER     NOT NULL REFERENCES accounts(id),
+  enabled                 BOOLEAN     NOT NULL DEFAULT TRUE,
+  min_roundup_minor_units BIGINT      NOT NULL DEFAULT 2000,
+  max_roundup_minor_units BIGINT      NOT NULL DEFAULT 5000,
+  sweep_day               INTEGER     NOT NULL DEFAULT 28 CHECK (sweep_day BETWEEN 1 AND 28),
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Phase 9: each individual partner purchase event
+CREATE TABLE IF NOT EXISTS invisible_savings_events (
+  id                          SERIAL      PRIMARY KEY,
+  user_id                     INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  partner_merchant_id         INTEGER     NOT NULL REFERENCES partner_merchants(id),
+  source_account_id           INTEGER     NOT NULL REFERENCES accounts(id),
+  destination_account_id      INTEGER     NOT NULL REFERENCES accounts(id),
+  purchase_transaction_id     INTEGER     REFERENCES transactions(id),
+  saving_transaction_id       INTEGER     REFERENCES transactions(id),
+  purchase_amount_minor_units BIGINT      NOT NULL CHECK (purchase_amount_minor_units > 0),
+  roundup_amount_minor_units  BIGINT      NOT NULL CHECK (roundup_amount_minor_units > 0),
+  total_debit_minor_units     BIGINT      NOT NULL CHECK (total_debit_minor_units > 0),
+  currency                    TEXT        NOT NULL DEFAULT 'LKR',
+  status                      TEXT        NOT NULL DEFAULT 'accumulated',
+  month_key                   TEXT        NOT NULL,
+  idempotency_key             TEXT,
+  created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_invisible_events_user_month ON invisible_savings_events(user_id, month_key);
+CREATE INDEX IF NOT EXISTS idx_invisible_events_user_created ON invisible_savings_events(user_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invisible_events_idempotency
+  ON invisible_savings_events(user_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
+
+-- Phase 9: monthly sweep records
+CREATE TABLE IF NOT EXISTS invisible_savings_sweeps (
+  id                     SERIAL      PRIMARY KEY,
+  user_id                INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source_account_id      INTEGER     NOT NULL REFERENCES accounts(id),
+  destination_account_id INTEGER     NOT NULL REFERENCES accounts(id),
+  month_key              TEXT        NOT NULL,
+  amount_minor_units     BIGINT      NOT NULL CHECK (amount_minor_units > 0),
+  status                 TEXT        NOT NULL DEFAULT 'completed',
+  transaction_id         INTEGER     REFERENCES transactions(id),
+  created_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, month_key)
+);
 `
 
 // Phase 5B: passwords are bcrypt-hashed (12 rounds). Demo credentials only.
@@ -301,6 +368,28 @@ INSERT INTO transactions (from_account, to_account, amount, description, created
   ('1000004876', '9999999999',  4500.00, 'Dialog Mobile - Monthly Bill',      1, 'bill_payment', 'SEED-BP001', NOW() - INTERVAL '5 days'),
   ('1000004876', '9999999999',  2800.00, 'CEB Electricity Bill',              1, 'bill_payment', 'SEED-BP002', NOW() - INTERVAL '10 days')
 ON CONFLICT DO NOTHING;
+
+-- Phase 9: partner merchants (no local logo assets; logo_url left null for fallback badges)
+INSERT INTO partner_merchants (name, slug, category, logo_url, status, min_roundup_minor_units, max_roundup_minor_units) VALUES
+  ('Barista',       'barista',       'food_and_dining', null, 'active', 2000, 5000),
+  ('Java Lounge',   'java-lounge',   'food_and_dining', null, 'active', 2000, 5000),
+  ('KFC',           'kfc',           'food_and_dining', null, 'active', 2000, 5000),
+  ('Pizza Hut',     'pizza-hut',     'food_and_dining', null, 'active', 2000, 5000),
+  ('Dominos',       'dominos',       'food_and_dining', null, 'active', 2000, 5000),
+  ('Crepe Runner',  'crepe-runner',  'food_and_dining', null, 'active', 2000, 5000),
+  ('Caravan Fresh', 'caravan-fresh', 'food_and_dining', null, 'active', 2000, 5000)
+ON CONFLICT (slug) DO NOTHING;
+
+-- Phase 9: default invisible savings settings for demo customer
+-- source = Expenses account (1000004876), destination = Savings account (1000003423)
+INSERT INTO invisible_savings_settings
+  (user_id, source_account_id, destination_account_id, enabled, min_roundup_minor_units, max_roundup_minor_units, sweep_day)
+SELECT
+  1,
+  (SELECT id FROM accounts WHERE account_number = '1000004876' LIMIT 1),
+  (SELECT id FROM accounts WHERE account_number = '1000003423' LIMIT 1),
+  true, 2000, 5000, 28
+WHERE NOT EXISTS (SELECT 1 FROM invisible_savings_settings WHERE user_id = 1);
 `
 
 let booted = false

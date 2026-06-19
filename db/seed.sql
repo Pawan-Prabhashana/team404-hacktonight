@@ -74,3 +74,16 @@ INSERT INTO accounts (id, user_id, account_number, account_type, currency, balan
    '00000000-0000-0000-0000-000000000003',
    '9999999999', 'admin',   'LKR', 999999999, 'Admin Vault')
 ON CONFLICT (account_number) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- PHASE 9: PARTNER MERCHANTS
+-- ---------------------------------------------------------------------------
+INSERT INTO partner_merchants (name, slug, category, logo_url, status, min_roundup_minor_units, max_roundup_minor_units) VALUES
+  ('Barista',       'barista',       'food_and_dining', null, 'active', 2000, 5000),
+  ('Java Lounge',   'java-lounge',   'food_and_dining', null, 'active', 2000, 5000),
+  ('KFC',           'kfc',           'food_and_dining', null, 'active', 2000, 5000),
+  ('Pizza Hut',     'pizza-hut',     'food_and_dining', null, 'active', 2000, 5000),
+  ('Dominos',       'dominos',       'food_and_dining', null, 'active', 2000, 5000),
+  ('Crepe Runner',  'crepe-runner',  'food_and_dining', null, 'active', 2000, 5000),
+  ('Caravan Fresh', 'caravan-fresh', 'food_and_dining', null, 'active', 2000, 5000)
+ON CONFLICT (slug) DO NOTHING;

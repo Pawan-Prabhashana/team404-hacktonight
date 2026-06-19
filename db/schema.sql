@@ -279,3 +279,70 @@ CREATE TABLE IF NOT EXISTS transfer_limits (
   updated_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT transfer_limits_account_unique UNIQUE (account_id)
 );
+
+-- =============================================================================
+-- PHASE 9: INVISIBLE SAVINGS
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS partner_merchants (
+  id                      SERIAL      PRIMARY KEY,
+  name                    TEXT        NOT NULL UNIQUE,
+  slug                    TEXT        NOT NULL UNIQUE,
+  category                TEXT        NOT NULL DEFAULT 'food_and_dining',
+  logo_url                TEXT,
+  status                  TEXT        NOT NULL DEFAULT 'active',
+  min_roundup_minor_units BIGINT      NOT NULL DEFAULT 2000,
+  max_roundup_minor_units BIGINT      NOT NULL DEFAULT 5000,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_partner_merchants_status ON partner_merchants(status);
+
+CREATE TABLE IF NOT EXISTS invisible_savings_settings (
+  id                      SERIAL      PRIMARY KEY,
+  user_id                 INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  source_account_id       INTEGER     NOT NULL REFERENCES accounts(id),
+  destination_account_id  INTEGER     NOT NULL REFERENCES accounts(id),
+  enabled                 BOOLEAN     NOT NULL DEFAULT TRUE,
+  min_roundup_minor_units BIGINT      NOT NULL DEFAULT 2000,
+  max_roundup_minor_units BIGINT      NOT NULL DEFAULT 5000,
+  sweep_day               INTEGER     NOT NULL DEFAULT 28 CHECK (sweep_day BETWEEN 1 AND 28),
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS invisible_savings_events (
+  id                          SERIAL      PRIMARY KEY,
+  user_id                     INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  partner_merchant_id         INTEGER     NOT NULL REFERENCES partner_merchants(id),
+  source_account_id           INTEGER     NOT NULL REFERENCES accounts(id),
+  destination_account_id      INTEGER     NOT NULL REFERENCES accounts(id),
+  purchase_transaction_id     INTEGER     REFERENCES transactions(id),
+  saving_transaction_id       INTEGER     REFERENCES transactions(id),
+  purchase_amount_minor_units BIGINT      NOT NULL CHECK (purchase_amount_minor_units > 0),
+  roundup_amount_minor_units  BIGINT      NOT NULL CHECK (roundup_amount_minor_units > 0),
+  total_debit_minor_units     BIGINT      NOT NULL CHECK (total_debit_minor_units > 0),
+  currency                    TEXT        NOT NULL DEFAULT 'LKR',
+  status                      TEXT        NOT NULL DEFAULT 'accumulated',
+  month_key                   TEXT        NOT NULL,
+  idempotency_key             TEXT,
+  created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_invisible_events_user_month    ON invisible_savings_events(user_id, month_key);
+CREATE INDEX IF NOT EXISTS idx_invisible_events_user_created  ON invisible_savings_events(user_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invisible_events_idempotency
+  ON invisible_savings_events(user_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS invisible_savings_sweeps (
+  id                     SERIAL      PRIMARY KEY,
+  user_id                INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source_account_id      INTEGER     NOT NULL REFERENCES accounts(id),
+  destination_account_id INTEGER     NOT NULL REFERENCES accounts(id),
+  month_key              TEXT        NOT NULL,
+  amount_minor_units     BIGINT      NOT NULL CHECK (amount_minor_units > 0),
+  status                 TEXT        NOT NULL DEFAULT 'completed',
+  transaction_id         INTEGER     REFERENCES transactions(id),
+  created_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, month_key)
+);
