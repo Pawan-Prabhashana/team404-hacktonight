@@ -59,10 +59,11 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--sb-bg);
-  color: var(--sb-text);
+  background: #f7f5f2;
+  color: #1f1f1f;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
 /* ── Marketing Shell ──────────────────────────────────── */
@@ -293,6 +294,7 @@ body {
 .app-shell-grid {
   display: grid;
   min-height: 100vh;
+  width: 100%;
   background: #f7f5f2;
   grid-template-columns: 280px 1fr;
 }
@@ -300,6 +302,7 @@ body {
 .app-main-area {
   min-width: 0;           /* prevents grid blowout */
   overflow-x: hidden;
+  background: #f7f5f2;   /* explicit bg — never see through */
 }
 
 .app-page {
