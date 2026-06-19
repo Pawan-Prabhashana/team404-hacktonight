@@ -1,124 +1,262 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '@/components/auth/AuthProvider'
 import AppShell from '@/components/layout/AppShell'
-
-type Biller = { id: string; name: string; logo: string; category: string }
-
-const billers: Biller[] = [
-  {
-    id: 'water',
-    name: 'Water Board',
-    logo: '/billers/water-board.png',
-    category: 'Utility'
-  },
-  { id: 'ceb', name: 'CEB', logo: '/billers/ceb.png', category: 'Utility' },
-  {
-    id: 'dialog',
-    name: 'Dialog',
-    logo: '/billers/dialog.png',
-    category: 'Telecom'
-  },
-  {
-    id: 'slt',
-    name: 'Sri Lanka Telecom',
-    logo: '/billers/electricity.png',
-    category: 'Telecom'
-  },
-  {
-    id: 'airtel',
-    name: 'Airtel',
-    logo: '/billers/airtel.png',
-    category: 'Telecom'
-  },
-  {
-    id: 'hutch',
-    name: 'Hutch',
-    logo: '/billers/hutch.png',
-    category: 'Telecom'
-  },
-  {
-    id: 'peotv',
-    name: 'PEO TV',
-    logo: '/billers/mpesa.png',
-    category: 'Entertainment'
-  },
-  {
-    id: 'cable',
-    name: 'Cable TV',
-    logo: '/billers/cable-tv.png',
-    category: 'Entertainment'
-  },
-  {
-    id: 'aia',
-    name: 'AIA Insurance',
-    logo: '/billers/aia.png',
-    category: 'Insurance'
-  },
-  {
-    id: 'lolc',
-    name: 'LOLC Finance',
-    logo: '/billers/lolc.png',
-    category: 'Finance'
-  },
-  { id: 'hsbc', name: 'HSBC', logo: '/billers/hsbc.png', category: 'Bank' },
-  {
-    id: 'insurance',
-    name: 'Insurance',
-    logo: '/billers/insurance2.png',
-    category: 'Insurance'
-  }
-]
+import EmptyState from '@/components/ui/EmptyState'
+import LoadingState from '@/components/ui/LoadingState'
+import {
+  AuthError,
+  type BillPaymentReceipt,
+  createBillPayment,
+  fetchAccounts,
+  fetchBillers,
+  fetchBillPayments,
+  type SafeAccount,
+  type SafeBiller,
+  type SafeBillPayment
+} from '@/lib/banking-client'
+import { analyzeBillRadar, formatDueDate } from '@/lib/bill-radar'
 
 type Screen = 'select' | 'form' | 'success'
 
+const CATEGORY_LABELS: Record<string, string> = {
+  utilities: 'Utilities',
+  mobile: 'Mobile',
+  internet: 'Internet',
+  insurance: 'Insurance',
+  education: 'Education',
+  government: 'Government',
+  credit_card: 'Credit Card',
+  other: 'Other'
+}
+
+function categoryLabel(c: string): string {
+  return CATEGORY_LABELS[c] ?? c.charAt(0).toUpperCase() + c.slice(1)
+}
+
+function BillerAvatar({
+  biller,
+  size = 48
+}: {
+  biller: SafeBiller
+  size?: number
+}) {
+  if (biller.logoUrl) {
+    return (
+      <div
+        style={{
+          position: 'relative',
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '1px solid #f1f5f8',
+          flexShrink: 0
+        }}
+      >
+        <Image
+          src={biller.logoUrl}
+          alt={biller.name}
+          fill
+          style={{ objectFit: 'contain' }}
+        />
+      </div>
+    )
+  }
+  const initials = biller.name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: 'rgba(8,127,122,0.12)',
+        color: '#087f7a',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 700,
+        fontSize: size * 0.32,
+        flexShrink: 0
+      }}
+    >
+      {initials}
+    </div>
+  )
+}
+
 export default function PayBillsPage() {
+  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
+
   const [screen, setScreen] = useState<Screen>('select')
-  const [selected, setSelected] = useState<Biller | null>(null)
-  const [accountNumber, setAccountNumber] = useState('')
-  const [billId, setBillId] = useState('')
+  const [dataLoading, setDataLoading] = useState(true)
+
+  const [accounts, setAccounts] = useState<SafeAccount[]>([])
+  const [billers, setBillers] = useState<SafeBiller[]>([])
+  const [history, setHistory] = useState<SafeBillPayment[]>([])
+
+  const [selected, setSelected] = useState<SafeBiller | null>(null)
+  const [accountId, setAccountId] = useState<number | null>(null)
+  const [billReference, setBillReference] = useState('')
   const [amount, setAmount] = useState('')
-  const [remarks, setRemarks] = useState('')
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [confirmation, setConfirmation] = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
 
-  const categories = [
-    'All',
-    ...Array.from(new Set(billers.map((b) => b.category)))
-  ]
-  const filtered =
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [receipt, setReceipt] = useState<BillPaymentReceipt | null>(null)
+
+  // ── Auth guard + initial load ────────────────────────────
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) {
+      router.push('/login?next=/pay-bills')
+      return
+    }
+    let cancelled = false
+    async function load() {
+      setDataLoading(true)
+      try {
+        const [accts, blrs, hist] = await Promise.all([
+          fetchAccounts(),
+          fetchBillers(),
+          fetchBillPayments({ limit: 50 })
+        ])
+        if (cancelled) return
+        setAccounts(accts)
+        setBillers(blrs)
+        setHistory(hist.billPayments)
+        const firstActive = accts.find((a) => a.status === 'active') ?? accts[0]
+        if (firstActive) setAccountId(firstActive.id)
+      } catch (err) {
+        if (err instanceof AuthError) router.push('/login?next=/pay-bills')
+      } finally {
+        if (!cancelled) setDataLoading(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, user, router])
+
+  const categories = useMemo(
+    () => ['All', ...Array.from(new Set(billers.map((b) => b.category)))],
+    [billers]
+  )
+  const filteredBillers =
     activeCategory === 'All'
       ? billers
       : billers.filter((b) => b.category === activeCategory)
 
-  function validate() {
+  const selectedAccount = accounts.find((a) => a.id === accountId) ?? null
+
+  const radar = useMemo(
+    () => analyzeBillRadar(history, selectedAccount?.balanceMinorUnits),
+    [history, selectedAccount]
+  )
+
+  function validate(): boolean {
     const e: Record<string, string> = {}
-    if (!accountNumber.trim() || !/^\d{6,16}$/.test(accountNumber.trim()))
-      e.accountNumber = 'Enter a valid account number (6–16 digits)'
-    if (!billId.trim() || billId.trim().length < 3)
-      e.billId = 'Bill ID must be at least 3 characters'
+    if (accountId == null) e.account = 'Select an account to pay from'
+    if (!billReference.trim() || billReference.trim().length < 3)
+      e.billReference = 'Bill reference must be at least 3 characters'
     if (!amount.trim() || Number.isNaN(Number(amount)) || Number(amount) <= 0)
       e.amount = 'Enter a valid amount'
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
-  function handlePay() {
+  async function refreshAfterPayment() {
+    try {
+      const [accts, hist] = await Promise.all([
+        fetchAccounts(),
+        fetchBillPayments({ limit: 50 })
+      ])
+      setAccounts(accts)
+      setHistory(hist.billPayments)
+    } catch {
+      /* non-fatal */
+    }
+  }
+
+  async function handlePay() {
+    setSubmitError('')
+    if (!selected || accountId == null) return
+    if (selectedAccount && selectedAccount.status !== 'active') {
+      setSubmitError(
+        'This account is frozen and cannot be used to pay bills. Choose another account.'
+      )
+      return
+    }
     if (!validate()) return
-    setConfirmation(Math.floor(10000000 + Math.random() * 90000000).toString())
-    setScreen('success')
+
+    setSubmitting(true)
+    try {
+      const r = await createBillPayment({
+        accountId,
+        billerId: selected.id,
+        billReference: billReference.trim(),
+        amount
+      })
+      // Only update UI after the API confirms success — no optimistic mutation.
+      setReceipt(r)
+      setScreen('success')
+      await refreshAfterPayment()
+    } catch (err) {
+      if (err instanceof AuthError) {
+        router.push('/login?next=/pay-bills')
+        return
+      }
+      setSubmitError(
+        err instanceof Error ? err.message : 'Bill payment failed. Try again.'
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function reset() {
     setScreen('select')
     setSelected(null)
-    setAccountNumber('')
-    setBillId('')
+    setBillReference('')
     setAmount('')
-    setRemarks('')
     setErrors({})
+    setSubmitError('')
+    setReceipt(null)
+  }
+
+  function fmtDate(iso: string | null): string {
+    if (!iso) return '—'
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return '—'
+    return d.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  if (authLoading || dataLoading) {
+    return (
+      <AppShell
+        title="Pay Bills"
+        subtitle="Utilities, telecom, insurance, and more"
+      >
+        <LoadingState />
+      </AppShell>
+    )
   }
 
   return (
@@ -127,59 +265,143 @@ export default function PayBillsPage() {
       subtitle="Utilities, telecom, insurance, and more"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-        {/* Bill Radar info card */}
-        <div
-          className="app-card-soft"
-          style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}
-        >
+        {/* ── Bill Radar preview ─────────────────────────── */}
+        <div className="app-card-soft">
           <div
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: '0.875rem',
-              background: 'rgba(8,127,122,0.15)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              color: '#087f7a',
-              flexShrink: 0,
-              fontSize: '1.25rem'
+              gap: '0.75rem',
+              marginBottom: radar.recurring.length > 0 ? '1.25rem' : 0
             }}
           >
-            ⚡
-          </div>
-          <div style={{ flex: 1 }}>
-            <p
+            <div
               style={{
-                fontWeight: 700,
-                color: '#071f2a',
-                fontSize: '0.9375rem'
+                width: 44,
+                height: 44,
+                borderRadius: '0.875rem',
+                background: 'rgba(8,127,122,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#087f7a',
+                flexShrink: 0,
+                fontSize: '1.25rem'
               }}
             >
-              Bill Radar
-            </p>
-            <p
+              ⚡
+            </div>
+            <div style={{ flex: 1 }}>
+              <p
+                style={{
+                  fontWeight: 700,
+                  color: '#071f2a',
+                  fontSize: '0.9375rem'
+                }}
+              >
+                Bill Radar preview
+              </p>
+              <p
+                style={{
+                  color: '#6b7a90',
+                  fontSize: '0.8125rem',
+                  marginTop: '0.125rem',
+                  lineHeight: 1.5
+                }}
+              >
+                {radar.recurring.length > 0
+                  ? `We found ${radar.recurring.length} recurring payment${radar.recurring.length !== 1 ? 's' : ''} in your history.`
+                  : 'Pay a bill twice and we will start detecting recurring payments for you.'}
+              </p>
+            </div>
+            <span className="app-pill app-pill-teal" style={{ flexShrink: 0 }}>
+              Smart preview
+            </span>
+          </div>
+
+          {radar.recurring.length > 0 && (
+            <div
               style={{
-                color: '#6b7a90',
-                fontSize: '0.875rem',
-                marginTop: '0.25rem',
-                lineHeight: 1.6
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                gap: '0.875rem'
               }}
             >
-              We will automatically detect recurring bills and forecast your
-              account balance after payments — coming in the next intelligence
-              update.
-            </p>
-          </div>
-          <span className="app-pill app-pill-teal" style={{ flexShrink: 0 }}>
-            Coming soon
-          </span>
+              {radar.recurring.map((r) => (
+                <div
+                  key={r.key}
+                  style={{
+                    padding: '1rem',
+                    borderRadius: '0.875rem',
+                    border: '1px solid #e7edf1',
+                    background: '#fff'
+                  }}
+                >
+                  <p
+                    style={{
+                      fontWeight: 700,
+                      color: '#071f2a',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    {r.billerName}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#6b7a90',
+                      marginTop: '0.125rem'
+                    }}
+                  >
+                    Ref {r.billReference} · {r.occurrences} payments
+                  </p>
+                  <div
+                    style={{
+                      marginTop: '0.625rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem',
+                      fontSize: '0.8125rem',
+                      color: '#374151'
+                    }}
+                  >
+                    <span>
+                      Next likely bill:{' '}
+                      <strong>around {formatDueDate(r.nextDueEstimate)}</strong>
+                    </span>
+                    <span>
+                      Estimated amount: <strong>{r.averageDisplay}</strong>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {radar.lowBalanceWarning && (
+            <div
+              style={{
+                marginTop: '1rem',
+                padding: '0.75rem 1rem',
+                borderRadius: '0.75rem',
+                background: 'rgba(245,158,11,0.08)',
+                border: '1px solid rgba(245,158,11,0.25)',
+                fontSize: '0.8125rem',
+                color: '#92400e',
+                lineHeight: 1.5
+              }}
+            >
+              Balance impact warning: paying your recurring bills (~
+              {radar.totalMonthlyDisplay}) would leave{' '}
+              {selectedAccount?.nickname || 'this account'} running low. Consider
+              topping up first.
+            </div>
+          )}
         </div>
 
-        {/* Biller select */}
+        {/* ── Biller select ──────────────────────────────── */}
         {screen === 'select' && (
           <div className="app-card">
-            {/* Category pills */}
             <div
               style={{
                 display: 'flex',
@@ -204,87 +426,169 @@ export default function PayBillsPage() {
                     fontSize: '0.8125rem'
                   }}
                 >
-                  {c}
+                  {c === 'All' ? 'All' : categoryLabel(c)}
                 </button>
               ))}
             </div>
 
-            {/* Biller grid */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-                gap: '1rem'
-              }}
-            >
-              {filtered.map((b) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  onClick={() => {
-                    setSelected(b)
-                    setScreen('form')
-                  }}
+            {filteredBillers.length === 0 ? (
+              <EmptyState
+                title="No billers available"
+                description="Billers will appear here once configured."
+              />
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                  gap: '1rem'
+                }}
+              >
+                {filteredBillers.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      setSelected(b)
+                      setErrors({})
+                      setSubmitError('')
+                      setScreen('form')
+                    }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.625rem',
+                      padding: '1.25rem 0.75rem',
+                      borderRadius: '1rem',
+                      border: '1.5px solid #e7edf1',
+                      background: '#fff',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s'
+                    }}
+                    onMouseEnter={(e) => {
+                      ;(e.currentTarget as HTMLButtonElement).style.borderColor =
+                        '#0d9488'
+                      ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        '0 4px 14px rgba(8,127,122,0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      ;(e.currentTarget as HTMLButtonElement).style.borderColor =
+                        '#e7edf1'
+                      ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                        'none'
+                    }}
+                  >
+                    <BillerAvatar biller={b} />
+                    <span
+                      style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: '#071f2a',
+                        textAlign: 'center',
+                        lineHeight: 1.3
+                      }}
+                    >
+                      {b.name}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>
+                      {categoryLabel(b.category)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Recent bill payments */}
+            <div style={{ marginTop: '2rem' }}>
+              <div className="app-section-header">
+                <h2 className="app-section-title" style={{ marginBottom: 0 }}>
+                  Recent bill payments
+                </h2>
+              </div>
+              {history.length === 0 ? (
+                <EmptyState
+                  title="No bill payments yet"
+                  description="Your paid bills will appear here."
+                />
+              ) : (
+                <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '0.625rem',
-                    padding: '1.25rem 0.75rem',
-                    borderRadius: '1rem',
-                    border: '1.5px solid #e7edf1',
-                    background: '#fff',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s'
-                  }}
-                  onMouseEnter={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.borderColor =
-                      '#0d9488'
-                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
-                      '0 4px 14px rgba(8,127,122,0.1)'
-                  }}
-                  onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLButtonElement).style.borderColor =
-                      '#e7edf1'
-                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
-                      'none'
+                    gap: '0.5rem'
                   }}
                 >
-                  <div
-                    style={{
-                      position: 'relative',
-                      width: 48,
-                      height: 48,
-                      borderRadius: '50%',
-                      overflow: 'hidden',
-                      border: '1px solid #f1f5f8'
-                    }}
-                  >
-                    <Image
-                      src={b.logo}
-                      alt={b.name}
-                      fill
-                      style={{ objectFit: 'contain' }}
-                    />
-                  </div>
-                  <span
-                    style={{
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      color: '#071f2a',
-                      textAlign: 'center',
-                      lineHeight: 1.3
-                    }}
-                  >
-                    {b.name}
-                  </span>
-                </button>
-              ))}
+                  {history.slice(0, 8).map((p) => (
+                    <div
+                      key={p.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '1rem',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '0.75rem',
+                        border: '1px solid #f1f5f8',
+                        background: '#fafcfc'
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: '#071f2a'
+                          }}
+                        >
+                          {p.billerName}
+                        </p>
+                        <p
+                          style={{
+                            fontSize: '0.75rem',
+                            color: '#6b7a90',
+                            marginTop: '0.125rem'
+                          }}
+                        >
+                          Ref {p.billReference} ·{' '}
+                          {fmtDate(p.paidAt ?? p.createdAt)}
+                          <span
+                            style={{
+                              fontFamily: 'monospace',
+                              marginLeft: '0.5rem',
+                              fontSize: '0.7rem'
+                            }}
+                          >
+                            {p.reference}
+                          </span>
+                        </p>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <p
+                          style={{
+                            fontSize: '0.9rem',
+                            fontWeight: 700,
+                            color: '#071f2a'
+                          }}
+                        >
+                          −{p.amountDisplay}
+                        </p>
+                        <span
+                          className="app-pill app-pill-green"
+                          style={{ marginTop: '0.25rem' }}
+                        >
+                          {p.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Payment form */}
+        {/* ── Payment form ───────────────────────────────── */}
         {screen === 'form' && selected && (
           <div
             style={{
@@ -325,24 +629,7 @@ export default function PayBillsPage() {
                   borderBottom: '1px solid #f1f5f8'
                 }}
               >
-                <div
-                  style={{
-                    position: 'relative',
-                    width: 44,
-                    height: 44,
-                    borderRadius: '0.75rem',
-                    overflow: 'hidden',
-                    border: '1px solid #e7edf1',
-                    flexShrink: 0
-                  }}
-                >
-                  <Image
-                    src={selected.logo}
-                    alt={selected.name}
-                    fill
-                    style={{ objectFit: 'contain' }}
-                  />
-                </div>
+                <BillerAvatar biller={selected} size={44} />
                 <div>
                   <p style={{ fontWeight: 700, color: '#071f2a' }}>
                     {selected.name}
@@ -354,7 +641,7 @@ export default function PayBillsPage() {
                       marginTop: '0.125rem'
                     }}
                   >
-                    {selected.category}
+                    {categoryLabel(selected.category)}
                   </p>
                 </div>
               </div>
@@ -366,49 +653,75 @@ export default function PayBillsPage() {
                   gap: '1.25rem'
                 }}
               >
-                {[
-                  {
-                    id: 'acc',
-                    label: 'Account number',
-                    val: accountNumber,
-                    set: setAccountNumber,
-                    placeholder: 'Enter account number',
-                    key: 'accountNumber'
-                  },
-                  {
-                    id: 'bid',
-                    label: 'Bill ID',
-                    val: billId,
-                    set: setBillId,
-                    placeholder: 'Enter bill reference',
-                    key: 'billId'
-                  }
-                ].map((f) => (
-                  <div key={f.id}>
-                    <label className="app-label">{f.label}</label>
-                    <input
-                      type="text"
-                      value={f.val}
-                      onChange={(e) => {
-                        f.set(e.target.value)
-                        setErrors((p) => {
-                          const n = { ...p }
-                          delete n[f.key]
-                          return n
-                        })
-                      }}
-                      placeholder={f.placeholder}
-                      className={`app-input${errors[f.key] ? ' app-input-error' : ''}`}
-                    />
-                    {errors[f.key] && (
-                      <p className="app-error-msg">{errors[f.key]}</p>
-                    )}
-                  </div>
-                ))}
-
+                {/* Account selector */}
                 <div>
-                  <label className="app-label">Amount (LKR)</label>
+                  <label className="app-label" htmlFor="pay-account">
+                    Pay from account
+                  </label>
+                  <select
+                    id="pay-account"
+                    value={accountId ?? ''}
+                    onChange={(e) => {
+                      setAccountId(Number(e.target.value))
+                      setErrors((p) => {
+                        const n = { ...p }
+                        delete n.account
+                        return n
+                      })
+                      setSubmitError('')
+                    }}
+                    className={`app-input${errors.account ? ' app-input-error' : ''}`}
+                  >
+                    {accounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.nickname || a.accountName} · {a.accountNumberMasked} ·{' '}
+                        {a.balanceDisplay}
+                        {a.status !== 'active' ? ' (frozen)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.account && (
+                    <p className="app-error-msg">{errors.account}</p>
+                  )}
+                  {selectedAccount && selectedAccount.status !== 'active' && (
+                    <p className="app-error-msg">
+                      This account is frozen and cannot pay bills.
+                    </p>
+                  )}
+                </div>
+
+                {/* Bill reference */}
+                <div>
+                  <label className="app-label" htmlFor="bill-ref">
+                    Bill reference
+                  </label>
                   <input
+                    id="bill-ref"
+                    type="text"
+                    value={billReference}
+                    onChange={(e) => {
+                      setBillReference(e.target.value)
+                      setErrors((p) => {
+                        const n = { ...p }
+                        delete n.billReference
+                        return n
+                      })
+                    }}
+                    placeholder="e.g. 123456789"
+                    className={`app-input${errors.billReference ? ' app-input-error' : ''}`}
+                  />
+                  {errors.billReference && (
+                    <p className="app-error-msg">{errors.billReference}</p>
+                  )}
+                </div>
+
+                {/* Amount */}
+                <div>
+                  <label className="app-label" htmlFor="bill-amount">
+                    Amount (LKR)
+                  </label>
+                  <input
+                    id="bill-amount"
                     type="number"
                     value={amount}
                     onChange={(e) => {
@@ -430,49 +743,45 @@ export default function PayBillsPage() {
                   )}
                 </div>
 
-                <div>
-                  <label className="app-label">
-                    Remarks{' '}
-                    <span style={{ fontWeight: 400, color: '#9ca3af' }}>
-                      (optional)
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Optional note"
-                    className="app-input"
-                  />
-                </div>
-
-                <div
-                  style={{
-                    padding: '0.875rem 1.125rem',
-                    borderRadius: '0.875rem',
-                    background: 'rgba(245,158,11,0.06)',
-                    border: '1px solid rgba(245,158,11,0.2)',
-                    fontSize: '0.8125rem',
-                    color: '#92400e',
-                    lineHeight: 1.6
-                  }}
-                >
-                  Bill payment is in demo mode. No funds are deducted from your
-                  account.
-                </div>
+                {submitError && (
+                  <div
+                    style={{
+                      padding: '0.875rem 1.125rem',
+                      borderRadius: '0.875rem',
+                      background: 'rgba(239,68,68,0.06)',
+                      border: '1px solid rgba(239,68,68,0.25)',
+                      fontSize: '0.8125rem',
+                      color: '#b91c1c',
+                      lineHeight: 1.6
+                    }}
+                  >
+                    {submitError}
+                  </div>
+                )}
 
                 <button
                   type="button"
                   onClick={handlePay}
+                  disabled={
+                    submitting ||
+                    (selectedAccount != null &&
+                      selectedAccount.status !== 'active')
+                  }
                   className="app-button-primary"
-                  style={{ width: '100%', fontSize: '1rem', fontWeight: 700 }}
+                  style={{
+                    width: '100%',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    opacity: submitting ? 0.7 : 1,
+                    cursor: submitting ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  Pay Now
+                  {submitting ? 'Processing…' : 'Pay Now'}
                 </button>
               </div>
             </div>
 
-            {/* Info sidebar */}
+            {/* Review summary */}
             <div className="app-card-soft">
               <p
                 style={{
@@ -482,103 +791,162 @@ export default function PayBillsPage() {
                   fontSize: '0.9375rem'
                 }}
               >
-                Payment Info
+                Payment summary
               </p>
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.875rem',
-                  fontSize: '0.875rem',
-                  color: '#374151'
+                  gap: '0.75rem',
+                  fontSize: '0.875rem'
                 }}
               >
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <span
-                    style={{ color: '#087f7a', flexShrink: 0, fontWeight: 700 }}
+                {[
+                  ['Biller', selected.name],
+                  ['Category', categoryLabel(selected.category)],
+                  [
+                    'From',
+                    selectedAccount
+                      ? `${selectedAccount.nickname || selectedAccount.accountName} (${selectedAccount.accountNumberMasked})`
+                      : '—'
+                  ],
+                  ['Bill reference', billReference.trim() || '—'],
+                  [
+                    'Amount',
+                    amount && Number(amount) > 0
+                      ? `LKR ${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : '—'
+                  ]
+                ].map(([label, val]) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: '1rem'
+                    }}
                   >
-                    ✓
-                  </span>
-                  Instant payment confirmation
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <span
-                    style={{ color: '#087f7a', flexShrink: 0, fontWeight: 700 }}
-                  >
-                    ✓
-                  </span>
-                  Secure channel — no card data stored
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <span
-                    style={{ color: '#087f7a', flexShrink: 0, fontWeight: 700 }}
-                  >
-                    ✓
-                  </span>
-                  Receipt emailed automatically
-                </div>
+                    <span style={{ color: '#6b7a90' }}>{label}</span>
+                    <span
+                      style={{
+                        color: '#071f2a',
+                        fontWeight: 600,
+                        textAlign: 'right'
+                      }}
+                    >
+                      {val}
+                    </span>
+                  </div>
+                ))}
               </div>
+              <p
+                style={{
+                  marginTop: '1rem',
+                  fontSize: '0.75rem',
+                  color: '#9ca3af',
+                  lineHeight: 1.6
+                }}
+              >
+                Funds are deducted from your account in real time and recorded in
+                the ledger. Duplicate submissions are blocked automatically.
+              </p>
             </div>
           </div>
         )}
 
-        {/* Success */}
-        {screen === 'success' && (
-          <div style={{ maxWidth: 440, margin: '0 auto', width: '100%' }}>
+        {/* ── Success / receipt ──────────────────────────── */}
+        {screen === 'success' && receipt && (
+          <div style={{ maxWidth: 460, margin: '0 auto', width: '100%' }}>
             <div
               className="app-card"
               style={{
-                textAlign: 'center',
-                padding: '2.5rem',
+                padding: '2.25rem',
                 border: '1.5px solid rgba(16,185,129,0.2)'
               }}
             >
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    background: 'rgba(16,185,129,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1rem',
+                    color: '#059669',
+                    fontSize: '1.5rem',
+                    fontWeight: 800
+                  }}
+                >
+                  ✓
+                </div>
+                <h2
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: '#071f2a'
+                  }}
+                >
+                  Bill payment complete
+                </h2>
+              </div>
+
               <div
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: '50%',
-                  background: 'rgba(16,185,129,0.1)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 1.25rem',
-                  color: '#059669',
-                  fontSize: '1.5rem',
-                  fontWeight: 800
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                  fontSize: '0.875rem'
                 }}
               >
-                ✓
+                {[
+                  ['Reference', receipt.reference],
+                  ['Biller', receipt.billerName],
+                  ['Bill reference', receipt.billReference],
+                  ['Amount', receipt.amountDisplay],
+                  [
+                    'Paid from account',
+                    selectedAccount
+                      ? `${selectedAccount.nickname || selectedAccount.accountName} (${selectedAccount.accountNumberMasked})`
+                      : `#${receipt.accountId}`
+                  ],
+                  ['Date / time', fmtDate(receipt.paidAt)],
+                  ['Remaining balance', receipt.balanceAfterDisplay]
+                ].map(([label, val]) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: '1rem',
+                      paddingBottom: '0.5rem',
+                      borderBottom: '1px solid #f5f8fa'
+                    }}
+                  >
+                    <span style={{ color: '#6b7a90' }}>{label}</span>
+                    <span
+                      style={{
+                        color: '#071f2a',
+                        fontWeight: 600,
+                        textAlign: 'right',
+                        fontFamily:
+                          label === 'Reference' ? 'monospace' : undefined
+                      }}
+                    >
+                      {val}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <h2
-                style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 700,
-                  color: '#071f2a'
-                }}
-              >
-                Payment Submitted
-              </h2>
-              <p
-                style={{
-                  color: '#6b7a90',
-                  fontSize: '0.875rem',
-                  marginTop: '0.5rem',
-                  marginBottom: '1.5rem'
-                }}
-              >
-                Your {selected?.name} bill payment has been submitted.
-                <br />
-                Confirmation:{' '}
-                <strong style={{ fontFamily: 'monospace', color: '#071f2a' }}>
-                  {confirmation}
-                </strong>
-              </p>
+
               <div
                 style={{
                   display: 'flex',
                   gap: '0.75rem',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  marginTop: '1.75rem'
                 }}
               >
                 <button
@@ -586,7 +954,7 @@ export default function PayBillsPage() {
                   onClick={reset}
                   className="app-button-primary"
                 >
-                  Pay Another Bill
+                  Pay another bill
                 </button>
               </div>
             </div>
