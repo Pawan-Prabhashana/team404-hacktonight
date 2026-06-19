@@ -1,0 +1,498 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Serandib Bank — N26-Grade Design System
+   Phase 5B
+   ============================================================ */
+
+:root {
+  /* ── Marketing / Landing ──────────────────────────────── */
+  --sb-bg:        #f7f5f2;
+  --sb-white:     #ffffff;
+  --sb-text:      #1f1f1f;
+  --sb-muted:     #666666;
+  --sb-line:      #e7e2dc;
+  --sb-mint:      #dff4f2;
+  --sb-ice:       #ecf8ff;
+  --sb-teal:      #087f7a;
+  --sb-teal-dark: #065e5a;
+  --sb-navy:      #071f2a;
+  --sb-card:      #ffffff;
+
+  /* ── App / Dashboard ─────────────────────────────────── */
+  --background:   #f4f6fa;
+  --foreground:   #111827;
+
+  /* Serandib Brand Palette */
+  --serandib-navy:    #061a40;
+  --serandib-blue:    #0a63ff;
+  --serandib-sky:     #38bdf8;
+  --serandib-teal:    #087f7a;
+  --serandib-mint:    #dff4f2;
+  --serandib-muted:   #64748b;
+  --serandib-surface: rgba(255,255,255,0.90);
+  --serandib-border:  rgba(10,99,255,0.10);
+
+  /* Status */
+  --serandib-success: #10b981;
+  --serandib-warning: #f59e0b;
+  --serandib-danger:  #ef4444;
+
+  /* Legacy compatibility (used by dashboard / inner pages) */
+  --serandib-indigo:  #3730a3;
+  --serandib-blue:    #0a63ff;
+  --serandib-sky:     #38bdf8;
+
+  /* Sidebar */
+  --sidebar-bg:     #061a40;
+  --sidebar-active: rgba(10,99,255,0.22);
+  --sidebar-hover:  rgba(255,255,255,0.07);
+  --sidebar-text:   rgba(255,255,255,0.85);
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ── Reset & Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--sb-bg);
+  color: var(--sb-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Marketing Shell ──────────────────────────────────── */
+.marketing-shell {
+  background: var(--sb-bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Marketing Nav ────────────────────────────────────── */
+.marketing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--sb-line);
+  height: 72px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Marketing Sections ───────────────────────────────── */
+.marketing-section {
+  padding: 6rem 0;
+}
+
+.marketing-section-sm {
+  padding: 4rem 0;
+}
+
+.marketing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.marketing-rounded {
+  border-radius: 2rem;
+  overflow: hidden;
+}
+
+/* ── Serandib CTA Buttons ─────────────────────────────── */
+.serandib-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--sb-teal);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.serandib-cta:hover {
+  background: var(--sb-teal-dark);
+  transform: translateY(-1px);
+}
+
+.serandib-cta-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--sb-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  border: 1.5px solid var(--sb-line);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+
+.serandib-cta-outline:hover {
+  border-color: var(--sb-text);
+  background: rgba(0,0,0,0.04);
+}
+
+.serandib-cta-white {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  color: var(--sb-navy);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.875rem 2rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.serandib-cta-white:hover {
+  background: rgba(255,255,255,0.88);
+  transform: translateY(-1px);
+}
+
+/* ── Feature Cards ────────────────────────────────────── */
+.serandib-feature-card {
+  background: #f0efec;
+  border-radius: 1.5rem;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.serandib-feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+
+/* ── Phone Mockup ─────────────────────────────────────── */
+.serandib-phone {
+  position: relative;
+  width: 260px;
+  min-height: 520px;
+  background: #0f172a;
+  border-radius: 3rem;
+  box-shadow:
+    0 0 0 8px #1e293b,
+    0 0 0 10px #0f172a,
+    0 30px 80px rgba(0,0,0,0.35);
+  overflow: hidden;
+}
+
+.serandib-phone::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 24px;
+  background: #0f172a;
+  border-radius: 9999px;
+  z-index: 10;
+}
+
+/* ── Plan Cards ───────────────────────────────────────── */
+.serandib-plan-card {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.serandib-plan-card:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateY(-4px);
+}
+
+.serandib-plan-card.featured {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.35);
+}
+
+/* ── Editorial Section ────────────────────────────────── */
+.editorial-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .editorial-split {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+@keyframes float-card {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%       { transform: translateY(-8px) rotate(-2deg); }
+}
+
+.fade-in-up  { animation: fade-in-up 0.7s ease both; }
+.float-slow  { animation: float-slow 4s ease-in-out infinite; }
+.float-card  { animation: float-card 5s ease-in-out infinite; }
+
+/* Stagger delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+
+/* ── App Shell / Dashboard ────────────────────────────── */
+.app-shell-root {
+  display: flex;
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.app-main {
+  flex: 1;
+  overflow: auto;
+}
+
+/* ── Dashboard Cards ─────────────────────────────────── */
+.dash-card {
+  background: var(--serandib-surface);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.dash-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+}
+
+/* ── Balance Hero Card ────────────────────────────────── */
+.balance-hero {
+  background: linear-gradient(135deg, #061a40 0%, #0a3a7a 100%);
+  border-radius: 1.5rem;
+  padding: 2rem 2.5rem;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.balance-hero::after {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  pointer-events: none;
+}
+
+/* ── Quick Action Buttons ─────────────────────────────── */
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+  color: var(--foreground);
+}
+
+.quick-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+.sidebar-root {
+  width: 260px;
+  min-height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.875rem;
+  margin: 0.125rem 0;
+  color: var(--sidebar-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: var(--sidebar-hover);
+}
+
+.sidebar-link.active {
+  background: var(--sidebar-active);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Alias used by Sidebar.tsx */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  color: var(--sidebar-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.sidebar-item:hover {
+  background: var(--sidebar-hover);
+}
+
+.sidebar-item.active {
+  background: var(--sidebar-active);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Auth Forms ─────────────────────────────────────── */
+.auth-form-container {
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--sb-text);
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.auth-input:focus {
+  border-color: var(--sb-teal);
+  background: #fff;
+}
+
+.auth-input:hover {
+  border-color: #d1d5db;
+}
+
+/* ── App Status Pill (used by dashboard) ─────────────── */
+.serandib-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(10,99,255,0.1);
+  color: var(--serandib-blue);
+}
+
+.serandib-pill-green {
+  background: rgba(16,185,129,0.1);
+  color: #059669;
+}
+
+.serandib-pill-yellow {
+  background: rgba(245,158,11,0.1);
+  color: #b45309;
+}
+
+.serandib-pill-red {
+  background: rgba(239,68,68,0.1);
+  color: #dc2626;
+}
+
+/* ── App Card (used by dashboard inner pages) ───────── */
+.serandib-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Card with subtle shine effect */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ── Utility ──────────────────────────────────────────── */
+.text-muted { color: var(--sb-muted); }
+.text-teal  { color: var(--sb-teal); }
+.bg-mint    { background: var(--sb-mint); }
+.bg-ice     { background: var(--sb-ice); }
+.bg-navy    { background: var(--sb-navy); }
