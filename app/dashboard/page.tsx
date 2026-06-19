@@ -11,11 +11,13 @@ import {
   fetchAccounts,
   fetchBillPayments,
   fetchNotifications,
+  fetchSmartSpendSummary,
   fetchTransactions,
   type SafeAccount,
   type SafeBillPayment,
   type SafeNotification,
-  type SafeTransaction
+  type SafeTransaction,
+  type SmartSpendSummary
 } from '@/lib/banking-client'
 
 // ── Icons ───────────────────────────────────────────────
@@ -253,11 +255,12 @@ export default function Dashboard() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
 
-  const [accounts, setAccounts] = useState<SafeAccount[]>([])
-  const [transactions, setTransactions] = useState<SafeTransaction[]>([])
+  const [accounts, setAccounts]           = useState<SafeAccount[]>([])
+  const [transactions, setTransactions]   = useState<SafeTransaction[]>([])
   const [notifications, setNotifications] = useState<SafeNotification[]>([])
-  const [billPayments, setBillPayments] = useState<SafeBillPayment[]>([])
-  const [dataLoading, setDataLoading] = useState(true)
+  const [billPayments, setBillPayments]   = useState<SafeBillPayment[]>([])
+  const [spendSummary, setSpendSummary]   = useState<SmartSpendSummary | null>(null)
+  const [dataLoading, setDataLoading]     = useState(true)
 
   useEffect(() => {
     if (authLoading) return
@@ -269,16 +272,18 @@ export default function Dashboard() {
     async function load() {
       setDataLoading(true)
       try {
-        const [accts, txns, notifs, bills] = await Promise.all([
+        const [accts, txns, notifs, bills, spend] = await Promise.all([
           fetchAccounts(),
           fetchTransactions({ limit: 5 }),
           fetchNotifications(),
-          fetchBillPayments({ limit: 3 })
+          fetchBillPayments({ limit: 3 }),
+          fetchSmartSpendSummary().catch(() => null),
         ])
         setAccounts(accts)
         setTransactions(txns.transactions)
         setNotifications(notifs)
         setBillPayments(bills.billPayments)
+        setSpendSummary(spend)
       } catch {
         /* non-fatal */
       } finally {
@@ -565,7 +570,7 @@ export default function Dashboard() {
           <div
             style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
           >
-            {/* Smart Spend preview */}
+            {/* Smart Spend preview — real data from Phase 8 API */}
             <div className="app-card-dark">
               <p
                 style={{
@@ -587,7 +592,7 @@ export default function Dashboard() {
                   letterSpacing: '-0.03em'
                 }}
               >
-                74
+                {dataLoading ? '—' : (spendSummary?.metrics.financialHealthScore ?? '—')}
               </p>
               <p
                 style={{
@@ -598,6 +603,7 @@ export default function Dashboard() {
               >
                 Financial health score
               </p>
+              {/* Score bar */}
               <div
                 style={{
                   marginTop: '0.875rem',
@@ -611,10 +617,37 @@ export default function Dashboard() {
                     height: '100%',
                     borderRadius: 9999,
                     background: 'rgba(255,255,255,0.7)',
-                    width: '74%'
+                    width: `${spendSummary?.metrics.financialHealthScore ?? 0}%`,
+                    transition: 'width 0.5s ease',
                   }}
                 />
               </div>
+              {/* Top insight */}
+              {spendSummary?.insights[0] && (
+                <p
+                  style={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255,255,255,0.55)',
+                    marginTop: '0.625rem',
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {spendSummary.insights[0].message}
+                </p>
+              )}
+              {/* Savings potential */}
+              {spendSummary?.metrics.savingsPotentialMinorUnits !== undefined &&
+               spendSummary.metrics.savingsPotentialMinorUnits > 0 && (
+                <p
+                  style={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255,255,255,0.45)',
+                    marginTop: '0.375rem',
+                  }}
+                >
+                  Save up to {spendSummary.metrics.savingsPotentialDisplay}
+                </p>
+              )}
               <Link
                 href="/smart-spend"
                 style={{
@@ -625,7 +658,7 @@ export default function Dashboard() {
                   color: 'rgba(255,255,255,0.65)'
                 }}
               >
-                View insights →
+                View full insights →
               </Link>
             </div>
 

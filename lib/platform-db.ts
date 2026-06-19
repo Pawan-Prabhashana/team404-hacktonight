@@ -252,6 +252,55 @@ INSERT INTO billers (name, category, provider_code, logo_url, status) VALUES
   ('University Payments', 'education', 'UNI',     null,                        'active'),
   ('Municipal Council',   'government','MUNI',    null,                        'active')
 ON CONFLICT (provider_code) DO NOTHING;
+
+-- Phase 8: spend categories reference data
+INSERT INTO spend_categories (name, slug, color, icon) VALUES
+  ('Groceries',     'groceries',     '#22c55e', 'G'),
+  ('Utilities',     'utilities',     '#3b82f6', 'U'),
+  ('Dining',        'dining',        '#f97316', 'D'),
+  ('Transport',     'transport',     '#8b5cf6', 'T'),
+  ('Shopping',      'shopping',      '#ec4899', 'S'),
+  ('Subscriptions', 'subscriptions', '#6366f1', 'P'),
+  ('Salary',        'salary',        '#10b981', 'Y'),
+  ('Transfers',     'transfers',     '#64748b', 'X'),
+  ('Bills',         'bills',         '#f59e0b', 'B'),
+  ('Education',     'education',     '#0ea5e9', 'E'),
+  ('Insurance',     'insurance',     '#14b8a6', 'I'),
+  ('Travel',        'travel',        '#f43f5e', 'V'),
+  ('Other',         'other',         '#9ca3af', 'O')
+ON CONFLICT (slug) DO NOTHING;
+
+-- Phase 8: demo budgets for the demo customer (user 1)
+INSERT INTO budgets (user_id, category_slug, amount_minor_units, currency, period) VALUES
+  (1, 'groceries',      200000, 'LKR', 'monthly'),
+  (1, 'utilities',      150000, 'LKR', 'monthly'),
+  (1, 'dining',         120000, 'LKR', 'monthly'),
+  (1, 'transport',      100000, 'LKR', 'monthly'),
+  (1, 'shopping',       150000, 'LKR', 'monthly'),
+  (1, 'subscriptions',   50000, 'LKR', 'monthly')
+ON CONFLICT (user_id, category_slug, period) DO NOTHING;
+
+-- Phase 8: realistic demo transactions for Smart Spend analytics (current month)
+-- All amounts in LKR (NUMERIC 14,2). Minor units = amount * 100.
+-- References prevent duplicate inserts on server restart.
+INSERT INTO transactions (from_account, to_account, amount, description, created_by, type, reference, created_at) VALUES
+  ('1000004876', '9999999999',  1850.00, 'Keells Super - Weekly Groceries',  1, 'transfer', 'SEED-G001', NOW() - INTERVAL  '1 day'),
+  ('1000004876', '9999999999',  2200.00, 'Cargills Food City - Groceries',   1, 'transfer', 'SEED-G002', NOW() - INTERVAL  '4 days'),
+  ('1000004876', '9999999999',  1450.00, 'LAUGFS Supermarket',                1, 'transfer', 'SEED-G003', NOW() - INTERVAL  '9 days'),
+  ('1000004876', '9999999999',  1950.00, 'Commons Cafe - Team Lunch',         1, 'transfer', 'SEED-D001', NOW() - INTERVAL  '2 days'),
+  ('1000004876', '9999999999',   850.00, 'Burger King Colombo',               1, 'transfer', 'SEED-D002', NOW() - INTERVAL  '6 days'),
+  ('1000004876', '9999999999',  1200.00, 'Noodle Box Takeaway',               1, 'transfer', 'SEED-D003', NOW() - INTERVAL '12 days'),
+  ('1000004876', '9999999999',  1150.00, 'PickMe Taxi - Office commute',      1, 'transfer', 'SEED-T001', NOW() - INTERVAL  '1 day'),
+  ('1000004876', '9999999999',   750.00, 'Uber Ride - Airport',               1, 'transfer', 'SEED-T002', NOW() - INTERVAL  '5 days'),
+  ('1000004876', '9999999999',  3200.00, 'Fuel - IOC Petrol Station',         1, 'transfer', 'SEED-T003', NOW() - INTERVAL  '8 days'),
+  ('1000004876', '9999999999',  1490.00, 'Netflix Monthly Subscription',      1, 'transfer', 'SEED-S001', NOW() - INTERVAL  '3 days'),
+  ('1000004876', '9999999999',   599.00, 'Spotify Premium Subscription',      1, 'transfer', 'SEED-S002', NOW() - INTERVAL  '3 days'),
+  ('1000004876', '9999999999',  8500.00, 'ODEL Clothing Purchase',            1, 'transfer', 'SEED-SH001', NOW() - INTERVAL '7 days'),
+  ('1000004876', '9999999999',  4200.00, 'Amazon Household Essentials',       1, 'transfer', 'SEED-SH002', NOW() - INTERVAL '14 days'),
+  ('9999999999', '1000003423', 85000.00, 'Monthly Salary - Serandib Corp',    1, 'transfer', 'SEED-INC01', NOW() - INTERVAL '15 days'),
+  ('1000004876', '9999999999',  4500.00, 'Dialog Mobile - Monthly Bill',      1, 'bill_payment', 'SEED-BP001', NOW() - INTERVAL '5 days'),
+  ('1000004876', '9999999999',  2800.00, 'CEB Electricity Bill',              1, 'bill_payment', 'SEED-BP002', NOW() - INTERVAL '10 days')
+ON CONFLICT DO NOTHING;
 `
 
 let booted = false

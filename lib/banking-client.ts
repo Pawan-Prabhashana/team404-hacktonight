@@ -380,3 +380,136 @@ export async function markNotificationRead(
     method: 'POST'
   })
 }
+
+// ---------------------------------------------------------------------------
+// Smart Spend types — Phase 8
+// ---------------------------------------------------------------------------
+
+export type SpendCategory = {
+  id:    number
+  name:  string
+  slug:  string
+  color: string
+  icon:  string
+}
+
+export type BudgetItem = {
+  id:               number
+  categorySlug:     string
+  amountMinorUnits: number
+  currency:         string
+  period:           string
+}
+
+export type CategoryBreakdown = {
+  slug:              string
+  name:              string
+  color:             string
+  amountMinorUnits:  number
+  amountDisplay:     string
+  percentage:        number
+  budgetMinorUnits?: number
+  budgetDisplay?:    string
+  budgetUsedPct?:    number
+  status:            'safe' | 'watch' | 'over'
+}
+
+export type SmartSpendSummary = {
+  range: { from: string; to: string }
+  metrics: {
+    financialHealthScore:         number
+    monthlySpendMinorUnits:       number
+    monthlySpendDisplay:          string
+    savingsPotentialMinorUnits:   number
+    savingsPotentialDisplay:      string
+    averageDailySpendMinorUnits:  number
+    averageDailySpendDisplay:     string
+    incomeMinorUnits:             number
+    incomeDisplay:                string
+    debitMinorUnits:              number
+    debitDisplay:                 string
+    creditMinorUnits:             number
+    creditDisplay:                string
+  }
+  categories: CategoryBreakdown[]
+  insights: Array<{ type: string; title: string; message: string }>
+  recurring: Array<{
+    key:                     string
+    name:                    string
+    averageAmountMinorUnits: number
+    averageAmountDisplay:    string
+    nextExpectedDate?:       string
+    confidence:              number
+  }>
+  forecast: {
+    projectedMonthEndBalanceMinorUnits: number
+    projectedMonthEndBalanceDisplay:    string
+    confidence:                         number
+    warning?:                           string
+  }
+}
+
+export type FinancialTwinResult = {
+  scenarioType:            string
+  amountDisplay:           string
+  currentBalanceDisplay:   string
+  projectedBalanceDisplay: string
+  impactLevel:             'low' | 'medium' | 'high'
+  warnings:                string[]
+  recommendations:         string[]
+}
+
+// ---------------------------------------------------------------------------
+// Smart Spend helpers — Phase 8
+// ---------------------------------------------------------------------------
+
+export async function fetchSmartSpendSummary(params?: {
+  from?:      string
+  to?:        string
+  accountId?: number
+}): Promise<SmartSpendSummary> {
+  const qs = new URLSearchParams()
+  if (params?.from)      qs.set('from', params.from)
+  if (params?.to)        qs.set('to', params.to)
+  if (params?.accountId !== undefined) qs.set('accountId', String(params.accountId))
+  const suffix = qs.toString() ? `?${qs.toString()}` : ''
+  const data = await apiFetch<{ summary: SmartSpendSummary }>(`/api/smart-spend/summary${suffix}`)
+  return data.summary
+}
+
+export async function fetchSpendCategories(): Promise<SpendCategory[]> {
+  const data = await apiFetch<{ categories: SpendCategory[] }>('/api/smart-spend/categories')
+  return data.categories
+}
+
+export async function fetchBudgets(): Promise<BudgetItem[]> {
+  const data = await apiFetch<{ budgets: BudgetItem[] }>('/api/smart-spend/budgets')
+  return data.budgets
+}
+
+export async function upsertBudget(input: {
+  categorySlug: string
+  amount:       string | number
+  currency?:    string
+  period?:      'monthly'
+}): Promise<BudgetItem> {
+  const data = await apiFetch<{ budget: BudgetItem }>('/api/smart-spend/budgets', {
+    method: 'POST',
+    body:   JSON.stringify({ ...input, currency: input.currency ?? 'LKR', period: input.period ?? 'monthly' }),
+  })
+  return data.budget
+}
+
+export async function simulateFinancialTwin(input: {
+  scenarioType: 'purchase' | 'saving' | 'bill_payment' | 'transfer'
+  amount:       string | number
+  categorySlug?: string
+  accountId?:    number
+  description?:  string
+}): Promise<FinancialTwinResult> {
+  const data = await apiFetch<{ result: FinancialTwinResult }>('/api/smart-spend/simulate', {
+    method: 'POST',
+    body:   JSON.stringify(input),
+  })
+  return data.result
+}
