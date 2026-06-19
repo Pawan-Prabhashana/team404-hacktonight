@@ -417,16 +417,23 @@ async function runStatements(sql: string): Promise<void> {
         msg.includes('column') ||
         msg.includes('relation') ||
         msg.includes('no unique or exclusion constraint') ||
-        msg.includes('violates not-null constraint')
+        msg.includes('violates not-null constraint') ||
+        msg.includes('does not exist')
       ) {
         if (process.env.NODE_ENV !== 'production') {
           console.log(
             '[db] schema/seed skip (already applied):',
-            msg.slice(0, 80)
+            msg.slice(0, 120)
           )
         }
       } else {
-        // Real error — rethrow so callers know DB is not healthy.
+        // Real error — log the failing statement so it's easy to diagnose.
+        console.error(
+          '[db] runStatements fatal error:',
+          msg,
+          '\nFailing SQL:',
+          stmt.slice(0, 200)
+        )
         throw err
       }
     }
@@ -435,15 +442,18 @@ async function runStatements(sql: string): Promise<void> {
 
 export async function ensureDatabase() {
   if (booted) return
+  // Schema creation is critical — rethrow if it fails.
+  await runStatements(SCHEMA_DDL)
+  // Seed data is best-effort — log failures but do not block the app.
   try {
-    await runStatements(SCHEMA_DDL)
     await runStatements(SEED_DML)
-    booted = true
   } catch (err) {
-    // Do NOT set booted=true so the next request retries.
-    console.error('[db] ensureDatabase failed:', (err as Error).message)
-    throw err
+    console.error(
+      '[db] seed DML warning (non-fatal):',
+      (err as Error).message
+    )
   }
+  booted = true
 }
 
 // ---------------------------------------------------------------------------
