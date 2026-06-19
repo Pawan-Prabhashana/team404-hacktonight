@@ -43,7 +43,7 @@ export const beneficiaryIdSchema = z.coerce.number().int().positive()
 
 export const createBeneficiarySchema = z.object({
   name: z.string().trim().min(2).max(80),
-  bankName: z.string().trim().min(2).max(80).default('NOVA Bank'),
+  bankName: z.string().trim().min(2).max(80).default('Serandib Bank'),
   accountNumber: z.string().trim().min(6).max(34)
 })
 

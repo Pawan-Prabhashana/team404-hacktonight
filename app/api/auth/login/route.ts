@@ -161,17 +161,23 @@ export async function POST(request: Request) {
       return unauthorized(err.message)
     }
     const msg = (err as Error).message ?? 'unknown'
-    // Print the full stack in development so it's easy to diagnose DB issues.
+    console.error('[api/auth/login] unexpected error:', msg)
     if (process.env.NODE_ENV !== 'production') {
-      console.error(
-        '[api/auth/login] unexpected error:',
-        msg,
-        (err as Error).stack
-      )
-    } else {
-      console.error('[api/auth/login] unexpected error:', msg)
+      console.error((err as Error).stack)
     }
-    // Never leak internal error details to the client.
+
+    // Give a more helpful message when Docker / DB is unreachable
+    if (
+      msg.includes('ECONNREFUSED') ||
+      msg.includes('connect') ||
+      msg.includes('timeout') ||
+      msg.includes('database')
+    ) {
+      return serverError(
+        'Database unreachable. Make sure Docker is running (docker compose up db -d) and DATABASE_URL is set in .env.local, then restart the server.'
+      )
+    }
+
     return serverError('Unable to process login. Please try again.')
   }
 }

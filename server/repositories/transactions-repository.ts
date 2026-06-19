@@ -49,10 +49,28 @@ function toSafeTransaction(
   if (isDebit && isCredit) direction = 'internal'
   else if (isCredit) direction = 'credit'
 
+  // Phase 7: bill payments are stored in `transactions` with type
+  // 'bill_payment' (to_account holds the biller name). They are debits from the
+  // user's source account, so they are picked up by the same scoping query and
+  // shown alongside transfers with a biller-aware description.
+  const type = row.type ?? 'transfer'
+  let fallbackDescription: string
+  if (type === 'bill_payment') {
+    fallbackDescription = `Bill payment to ${row.to_account}`
+  } else if (type === 'card_purchase') {
+    fallbackDescription = `Partner purchase at ${row.to_account}`
+  } else if (type === 'invisible_savings_sweep') {
+    fallbackDescription = 'Invisible Savings monthly sweep'
+  } else if (direction === 'credit') {
+    fallbackDescription = `From ${row.from_account}`
+  } else {
+    fallbackDescription = `To ${row.to_account}`
+  }
+
   return {
     id: row.id,
     reference: row.reference ?? `TXN-${String(row.id).padStart(8, '0')}`,
-    type: row.type ?? 'transfer',
+    type,
     fromAccount: row.from_account,
     toAccount: row.to_account,
     direction,
@@ -63,7 +81,7 @@ function toSafeTransaction(
       row.status === 'SUCCESS'
         ? 'completed'
         : (row.status ?? 'completed').toLowerCase(),
-    description: row.description ?? '',
+    description: row.description || fallbackDescription,
     createdAt: row.created_at
   }
 }

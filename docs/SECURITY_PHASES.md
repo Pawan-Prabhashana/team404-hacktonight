@@ -183,7 +183,35 @@ Kept here to avoid scattering `TODO` comments across every file.
 
 ---
 
-## Phase 7: Smart Spend and SafePay Guardian (TODO)
+## Phase 7: Bill Payment Engine and Bill Radar — Complete ✅
+
+- [x] `billers` and `bill_payments` tables added to the running schema
+- [x] Atomic bill payment service (`withTransaction`, `SELECT ... FOR UPDATE`)
+- [x] Source account ownership verified inside the DB lock (userId from session)
+- [x] Frozen accounts cannot pay bills (`ACCOUNT_FROZEN` error)
+- [x] Insufficient funds rejected atomically (`INSUFFICIENT_FUNDS` error)
+- [x] Negative, zero, and NaN amounts rejected at validation layer (Zod)
+- [x] Idempotency prevents duplicate payments (unique index on user_id + idempotency_key)
+- [x] Each payment writes transaction + ledger entry + bill payment + audit log
+- [x] `bill_payments.reference` (`SRB-BILL-YYYYMMDD-XXXXXX`) generated and stored
+- [x] `transactions.type = 'bill_payment'` tracked and shown in transactions API
+- [x] `/api/billers` protected biller directory (active only, category/search)
+- [x] `/api/bill-payments` GET (history) + POST (pay) — protected, user-scoped
+- [x] `/api/bill-payments/[reference]` receipt endpoint (ownership-scoped)
+- [x] Pay Bills UI rebuilt — real API, account select, review, success receipt
+- [x] Bill Radar preview (rule-based recurring detection, not AI)
+- [x] Dashboard shows recent bills + bill payments in transactions
+- [x] `BILL_PAYMENT_ENGINE_CHECKLIST.md` created
+
+**NOT implemented in Phase 7 (deferred):**
+- Full Smart Spend analytics engine (Phase 8)
+- Full SafePay Guardian fraud engine
+- Statement PDF/CSV export
+- Real external payment gateway / SMS / email confirmations
+
+---
+
+## Phase 8: Smart Spend Analytics Engine (TODO)
 
 - Spending categorization, budget alerts, cashflow forecast
 - Risk scoring engine: velocity checks, unusual amounts, new recipients
@@ -196,3 +224,31 @@ Kept here to avoid scattering `TODO` comments across every file.
 - Rate limiting on transfer endpoints not yet implemented (login has basic in-memory limiter)
 - All error responses are generic to the client; ensure no new leakage in future phases
 - Dependency audit: run npm audit and fix high/critical CVEs before production
+
+---
+
+## Phase 8: Smart Spend Analytics Engine — Complete
+
+- Rule-based transaction categorization (dining, groceries, utilities, etc.)
+- Per-user monthly budgets with over-budget alerts
+- Financial Twin simulator (what-if scenarios — no real transactions)
+- Smart Spend summary API with cashflow forecast and recurring payment detection
+- Protected APIs: /api/smart-spend/summary, /api/smart-spend/categories, /api/smart-spend/budgets, /api/smart-spend/simulate
+- All data scoped by session user_id
+
+---
+
+## Phase 9: Invisible Savings Engine — Complete
+
+- Partner merchant registry (Barista, Java Lounge, KFC, Pizza Hut, Dominos, Crepe Runner, Caravan Fresh)
+- Automatic LKR 20–50 round-up per partner card transaction
+- Total debit = purchase + round-up (source account debited once atomically)
+- Savings accumulate monthly; credited to savings account only during month-end sweep
+- Idempotency protection (duplicate purchase key returns same receipt)
+- Monthly sweep cannot run twice for the same month
+- Protected APIs: /api/partner-merchants, /api/invisible-savings/settings, /api/invisible-savings/summary, /api/invisible-savings/purchase, /api/invisible-savings/sweep
+- Dashboard integration showing monthly savings, event count, next sweep date
+- Smart Spend Invisible Savings effect section
+- E-Statement shows card_purchase and invisible_savings_sweep transaction types
+- All ownership checks inside FOR UPDATE DB row locks
+- Audit logs written for INVISIBLE_SAVINGS_CAPTURED and INVISIBLE_SAVINGS_SWEPT events
