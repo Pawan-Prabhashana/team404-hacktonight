@@ -300,3 +300,71 @@ Demo credentials (unchanged):
 | 9 | SafePay Guardian -- fraud detection, risk scoring, anomaly alerts |
 | 10 | Statement Intelligence -- downloadable PDFs, advanced search |
 | 11 | Admin Fraud Command Center -- audit log viewer, protected admin dashboard |
+
+### Phase 8 -- Complete
+
+- Rule-based transaction categorization (dining, groceries, utilities, transport, etc.)
+- Per-user monthly budget tracking with over-budget detection
+- Financial Twin simulator: what-if scenario analysis (no real money moved)
+- Smart Spend summary: cashflow metrics, category breakdown, spend insights
+- Recurring payment detection based on transaction pattern analysis
+- Protected APIs: `/api/smart-spend/summary`, `/api/smart-spend/categories`, `/api/smart-spend/budgets`, `/api/smart-spend/simulate`
+- Phase 8 seed transactions for realistic demo data (groceries, dining, transport, subscriptions)
+- `docs/SMART_SPEND_ANALYTICS_CHECKLIST.md` manual test guide added
+
+### Phase 9 -- Complete (Final Phase)
+
+#### Invisible Savings Engine
+
+- 7 partner merchants: Barista, Java Lounge, KFC, Pizza Hut, Dominos, Crepe Runner, Caravan Fresh
+- Automatic LKR 20–50 round-up per partner card transaction
+- Round-up rule: next LKR 100 boundary, clamped to [LKR 20, LKR 50]
+  - LKR 480 → save LKR 20, total debit LKR 500
+  - LKR 499 → save LKR 20 (minimum), total debit LKR 519
+  - LKR 401 → save LKR 50 (maximum), total debit LKR 451
+- Source account debited once atomically: purchase + round-up together
+- Savings accumulate monthly; NOT credited until month-end sweep
+- Sweep cannot run twice for same month (UNIQUE constraint + no-op guard)
+- Idempotency key prevents double-recording of the same purchase
+- Protected APIs: `/api/partner-merchants`, `/api/invisible-savings/settings`, `/api/invisible-savings/summary`, `/api/invisible-savings/purchase`, `/api/invisible-savings/sweep`
+- Invisible Savings page at `/invisible-savings` with purchase simulator, partner grid, sweep UI, settings, event history
+- Dashboard Invisible Savings card: saved this month, event count, next sweep date
+- Smart Spend Invisible Savings effect section
+- E-Statement shows `card_purchase` and `invisible_savings_sweep` transaction types
+- Sidebar nav item added
+- `docs/INVISIBLE_SAVINGS_CHECKLIST.md` manual test guide added
+- `docs/FINAL_TESTING_AND_HARDENING_CHECKLIST.md` comprehensive security & auth checklist
+
+**Partner logo note:** Partner logo cards use local assets when provided. If official logo assets are not available in the repository, Serandib Bank uses neutral text-based partner badges for demo purposes.
+
+---
+
+## Demo Flow
+
+1. Open http://localhost:3000
+2. Log in as customer: `customer@serandib.test` / `SerandibUser123`
+3. View dashboard — see accounts, recent transactions, Invisible Savings card
+4. Send money: Transfer → select source account → select beneficiary → send
+5. Pay a bill: Pay Bills → pick a biller (e.g. CEB) → enter reference → pay
+6. Open Smart Spend — view category breakdown, budget status, Financial Twin
+7. Open Invisible Savings
+8. Select Barista, Expenses account, amount LKR 480
+9. Submit — receipt shows LKR 20 saved, total LKR 500 debited from Expenses
+10. Sweep this month into Savings — see savings account balance increase
+11. View E-Statement — see Card Purchase and Savings Sweep entries
+12. Open Security Center — session info, security checks
+13. Logout
+
+## Tech Stack
+
+- **Framework:** Next.js 14+ (App Router, Server Components, Route Handlers)
+- **Database:** PostgreSQL (via `pg` library, Docker Compose for local dev)
+- **Auth:** Custom session system (HttpOnly cookie, SHA-256 token hash in DB)
+- **Validation:** Zod v4
+- **Linting:** Biome
+- **Package manager:** Bun
+- **Styling:** CSS variables (design system in `app/globals.css`)
+
+## Terminal Troubleshooting
+
+If your terminal shows `dquote>`, press Ctrl + C. It means a quote was not closed. Retype the command on a single line.
