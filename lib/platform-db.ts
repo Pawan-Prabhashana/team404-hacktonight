@@ -176,6 +176,33 @@ CREATE INDEX IF NOT EXISTS idx_bill_payments_account_created ON bill_payments(ac
 CREATE UNIQUE INDEX IF NOT EXISTS idx_bill_payments_user_idempotency
   ON bill_payments(user_id, idempotency_key)
   WHERE idempotency_key IS NOT NULL;
+
+-- Phase 8: category tag on each transaction for Smart Spend analytics
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS category_slug TEXT;
+
+-- Phase 8: spend categories reference table
+CREATE TABLE IF NOT EXISTS spend_categories (
+  id         SERIAL      PRIMARY KEY,
+  name       TEXT        NOT NULL UNIQUE,
+  slug       TEXT        NOT NULL UNIQUE,
+  color      TEXT        NOT NULL DEFAULT '#9ca3af',
+  icon       TEXT        NOT NULL DEFAULT 'o',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Phase 8: per-user monthly budgets
+CREATE TABLE IF NOT EXISTS budgets (
+  id                  SERIAL      PRIMARY KEY,
+  user_id             INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category_slug       TEXT        NOT NULL,
+  amount_minor_units  BIGINT      NOT NULL CHECK (amount_minor_units > 0),
+  currency            TEXT        NOT NULL DEFAULT 'LKR',
+  period              TEXT        NOT NULL DEFAULT 'monthly',
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, category_slug, period)
+);
+CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
 `
 
 // Phase 5B: passwords are bcrypt-hashed (12 rounds). Demo credentials only.

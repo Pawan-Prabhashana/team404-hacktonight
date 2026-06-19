@@ -115,7 +115,11 @@ app/                     # Next.js App Router pages and API routes
     notifications                     # GET -- session-scoped
     notifications/[id]/read           # POST -- mark read
     search                            # GET -- user-scoped only
-    transfer                          # POST -- disabled (Phase 6 ledger pending)
+    transfer                          # POST -- atomic transfer engine (Phase 6)
+    transfers/[reference]             # GET  -- transfer receipt (ownership-scoped)
+    billers                           # GET  -- active billers (Phase 7)
+    bill-payments                     # GET/POST -- atomic bill payments (Phase 7)
+    bill-payments/[reference]         # GET  -- bill payment receipt (ownership-scoped)
     admin/system                      # GET  -- admin-only diagnostics
 components/
   auth/
@@ -267,11 +271,32 @@ docs/
 - Accounts page: per-account Send Money and History buttons
 - `docs/TRANSFER_ENGINE_CHECKLIST.md` manual test guide added
 
+### Phase 7 -- Complete
+
+- Added `billers` and `bill_payments` schema support (running + documented schema)
+- Added atomic, ledger-backed bill payment service
+  (`server/services/bill-payment-service.ts`) with `FOR UPDATE` source-account lock
+- Added protected `GET /api/billers` (active billers, category/search filters)
+- Added protected `GET/POST /api/bill-payments` (history + atomic payment)
+- Added protected `GET /api/bill-payments/:reference` receipt endpoint
+- Idempotency protection (unique index on `user_id + idempotency_key`)
+- Every payment writes a transaction + ledger entry + bill payment row + audit log
+- Frozen accounts cannot pay bills; insufficient funds rejected atomically
+- Connected Pay Bills UI to real APIs (account select, review, success receipt)
+- Added Bill Radar preview (rule-based recurring detection — not AI)
+- Integrated bill payments into the dashboard (recent bills + transactions)
+- `docs/BILL_PAYMENT_ENGINE_CHECKLIST.md` manual test guide added
+
+Demo credentials (unchanged):
+
+- Customer: `customer@serandib.test` / `SerandibUser123`
+- Admin: `admin@serandib.test` / `SerandibAdmin123`
+
 ### Planned Phases
 
 | Phase | Focus |
 |-------|-------|
-| 7 | Bill Payment Engine -- biller verification, idempotent payment records |
-| 8 | SafePay Guardian -- fraud detection, risk scoring, anomaly alerts |
-| 9 | Statement Intelligence -- downloadable PDFs, advanced search |
-| 10 | Admin Fraud Command Center -- audit log viewer, protected admin dashboard |
+| 8 | Smart Spend Analytics -- spending categorization, budgets, cashflow forecast |
+| 9 | SafePay Guardian -- fraud detection, risk scoring, anomaly alerts |
+| 10 | Statement Intelligence -- downloadable PDFs, advanced search |
+| 11 | Admin Fraud Command Center -- audit log viewer, protected admin dashboard |
