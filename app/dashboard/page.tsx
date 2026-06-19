@@ -9,9 +9,11 @@ import EmptyState from '@/components/ui/EmptyState'
 import LoadingState from '@/components/ui/LoadingState'
 import {
   fetchAccounts,
+  fetchBillPayments,
   fetchNotifications,
   fetchTransactions,
   type SafeAccount,
+  type SafeBillPayment,
   type SafeNotification,
   type SafeTransaction
 } from '@/lib/banking-client'
@@ -254,6 +256,7 @@ export default function Dashboard() {
   const [accounts, setAccounts] = useState<SafeAccount[]>([])
   const [transactions, setTransactions] = useState<SafeTransaction[]>([])
   const [notifications, setNotifications] = useState<SafeNotification[]>([])
+  const [billPayments, setBillPayments] = useState<SafeBillPayment[]>([])
   const [dataLoading, setDataLoading] = useState(true)
 
   useEffect(() => {
@@ -266,14 +269,16 @@ export default function Dashboard() {
     async function load() {
       setDataLoading(true)
       try {
-        const [accts, txns, notifs] = await Promise.all([
+        const [accts, txns, notifs, bills] = await Promise.all([
           fetchAccounts(),
           fetchTransactions({ limit: 5 }),
-          fetchNotifications()
+          fetchNotifications(),
+          fetchBillPayments({ limit: 3 })
         ])
         setAccounts(accts)
         setTransactions(txns.transactions)
         setNotifications(notifs)
+        setBillPayments(bills.billPayments)
       } catch {
         /* non-fatal */
       } finally {
@@ -621,6 +626,90 @@ export default function Dashboard() {
               >
                 View insights →
               </Link>
+            </div>
+
+            {/* Recent & upcoming bills */}
+            <div className="app-card">
+              <div className="app-section-header">
+                <h2 className="app-section-title" style={{ marginBottom: 0 }}>
+                  Bills
+                </h2>
+                <Link href="/pay-bills" className="app-view-all">
+                  Pay bills →
+                </Link>
+              </div>
+              {dataLoading ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem'
+                  }}
+                >
+                  {[1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="app-skeleton"
+                      style={{ height: 44 }}
+                    />
+                  ))}
+                </div>
+              ) : billPayments.length === 0 ? (
+                <EmptyState
+                  title="No bills paid yet"
+                  description="Pay a bill to see it here."
+                />
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.625rem'
+                  }}
+                >
+                  {billPayments.map((b) => (
+                    <div
+                      key={b.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.75rem'
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontSize: '0.8125rem',
+                            fontWeight: 600,
+                            color: '#071f2a',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {b.billerName}
+                        </p>
+                        <p style={{ fontSize: '0.7rem', color: '#6b7a90' }}>
+                          {new Date(
+                            b.paidAt ?? b.createdAt
+                          ).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short'
+                          })}{' '}
+                          · Ref {b.billReference}
+                        </p>
+                      </div>
+                      <span
+                        className="tx-amount-debit"
+                        style={{ fontSize: '0.8125rem', flexShrink: 0 }}
+                      >
+                        −{b.amountDisplay}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Security */}
