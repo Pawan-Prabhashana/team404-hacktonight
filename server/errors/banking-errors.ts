@@ -76,3 +76,23 @@ export class BillPaymentFailedError extends BankingError {
     super(message, 400, 'BILL_PAYMENT_FAILED')
   }
 }
+
+// ---------------------------------------------------------------------------
+// Phase 9: Invisible Savings errors
+// ---------------------------------------------------------------------------
+
+export class MerchantNotFoundError extends BankingError {
+  constructor() {
+    super('Partner merchant not found or inactive.', 404, 'MERCHANT_NOT_FOUND')
+  }
+}
+
+export class InvisibleSavingsDisabledError extends BankingError {
+  constructor() {
+    super(
+      'Invisible Savings is not enabled for this account.',
+      400,
+      'INVISIBLE_SAVINGS_DISABLED'
+    )
+  }
+}
