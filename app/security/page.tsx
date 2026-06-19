@@ -2,39 +2,34 @@ import AppShell from '@/components/layout/AppShell'
 
 const timeline = [
   {
-    icon: '✅',
     event: 'Login successful',
     detail: 'customer@serandib.test · session established',
     time: 'Just now',
-    color: 'var(--serandib-success)'
+    good: true
   },
   {
-    icon: '👁',
     event: 'Dashboard viewed',
     detail: 'Accounts and balances loaded',
     time: '2 min ago',
-    color: 'var(--serandib-blue)'
+    good: true
   },
   {
-    icon: '💳',
     event: 'Account list fetched',
     detail: '2 accounts returned — ownership verified',
     time: '2 min ago',
-    color: 'var(--serandib-blue)'
+    good: true
   },
   {
-    icon: '🔒',
     event: 'Shield check performed',
     detail: 'All accounts: active status confirmed',
     time: '5 min ago',
-    color: 'var(--serandib-success)'
+    good: true
   },
   {
-    icon: '🔑',
     event: 'Session token validated',
     detail: 'SHA-256 hash matched — session valid',
     time: '10 min ago',
-    color: 'var(--serandib-success)'
+    good: true
   }
 ]
 
@@ -82,312 +77,408 @@ const checklist = [
   {
     ok: false,
     label: 'Device/session trust score',
-    detail: 'Coming in Phase 6 — multi-device session tracking'
+    detail: 'Coming in Phase 6 — multi-device session tracking',
+    phase: '6'
   },
   {
     ok: false,
     label: 'Real-time transfer risk scoring',
-    detail: 'Coming in Phase 6 — SafePay execution engine'
+    detail: 'Coming in Phase 6 — SafePay execution engine',
+    phase: '6'
   }
 ]
 
+const CheckIcon = () => (
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+)
+const ClockIcon = () => (
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+)
+const ShieldIcon = () => (
+  <svg
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+)
+
 export default function SecurityPage() {
   return (
-    <AppShell>
-      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1
-            className="text-2xl font-extrabold"
-            style={{ color: 'var(--serandib-navy)' }}
-          >
-            Security Center
-          </h1>
-          <p
-            className="mt-1 text-sm"
-            style={{ color: 'var(--serandib-muted)' }}
-          >
-            Session protection, account shield, and audit timeline
-          </p>
-        </div>
-
+    <AppShell
+      title="Security Center"
+      subtitle="Session protection, Account Shield, and audit timeline"
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
         {/* Shield status banner */}
         <div
-          className="mb-6 flex items-center gap-4 rounded-2xl p-5"
+          className="app-card"
           style={{
-            background: 'linear-gradient(135deg, #022c22 0%, #064e3b 100%)',
-            color: 'white'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.25rem',
+            border: '1.5px solid rgba(16,185,129,0.25)',
+            background: 'rgba(16,185,129,0.03)'
           }}
         >
-          <span className="text-4xl">🛡</span>
-          <div>
-            <p className="font-bold text-lg">Serandib Shield Active</p>
-            <p className="text-sm text-white/60">
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              background: 'rgba(16,185,129,0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#059669',
+              flexShrink: 0
+            }}
+          >
+            <ShieldIcon />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                marginBottom: '0.375rem'
+              }}
+            >
+              <p
+                style={{ fontWeight: 700, color: '#071f2a', fontSize: '1rem' }}
+              >
+                Serandib Shield Active
+              </p>
+              <span className="app-pill app-pill-green">Secure</span>
+            </div>
+            <p
+              style={{
+                fontSize: '0.875rem',
+                color: '#6b7a90',
+                lineHeight: 1.6
+              }}
+            >
               Your session is protected by HttpOnly cookies, server-side
               validation, and account ownership checks on every API call.
             </p>
           </div>
-          <span
-            className="serandib-pill ml-auto shrink-0"
-            style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7' }}
-          >
-            ✓ Secure
-          </span>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          {/* Security checklist */}
-          <div className="lg:col-span-3">
-            <div className="serandib-card p-6">
-              <h2
-                className="mb-4 font-bold"
-                style={{ color: 'var(--serandib-navy)' }}
+        {/* Main 2-column */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0,1.4fr) minmax(300px,0.8fr)',
+            gap: '1.5rem',
+            alignItems: 'start'
+          }}
+        >
+          {/* Left column */}
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+          >
+            {/* Security Checklist */}
+            <div className="app-card">
+              <h2 className="app-section-title">Security Checklist</h2>
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: '0' }}
               >
-                Security Checklist
-              </h2>
-              <div className="space-y-3">
-                {checklist.map((item) => (
+                {checklist.map((item, i) => (
                   <div
                     key={item.label}
-                    className="flex items-start gap-3 rounded-xl p-3"
                     style={{
-                      background: item.ok
-                        ? 'rgba(16,185,129,0.04)'
-                        : 'rgba(10,99,255,0.03)',
-                      border: `1px solid ${item.ok ? 'rgba(16,185,129,0.15)' : 'rgba(10,99,255,0.08)'}`
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '1rem',
+                      padding: '0.875rem 0',
+                      borderBottom:
+                        i < checklist.length - 1 ? '1px solid #f1f5f8' : 'none'
                     }}
                   >
-                    <span
-                      className="mt-0.5 text-base shrink-0"
+                    <div
                       style={{
-                        color: item.ok
-                          ? 'var(--serandib-success)'
-                          : 'var(--serandib-muted)'
+                        width: 28,
+                        height: 28,
+                        borderRadius: '50%',
+                        background: item.ok
+                          ? 'rgba(16,185,129,0.1)'
+                          : '#f1f5f8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: item.ok ? '#059669' : '#9ca3af',
+                        flexShrink: 0,
+                        marginTop: '0.125rem'
                       }}
                     >
-                      {item.ok ? '✓' : '○'}
-                    </span>
-                    <div>
-                      <p
-                        className="text-sm font-semibold"
+                      {item.ok ? <CheckIcon /> : <ClockIcon />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
                         style={{
-                          color: item.ok
-                            ? 'var(--serandib-navy)'
-                            : 'var(--serandib-muted)'
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.625rem',
+                          flexWrap: 'wrap'
                         }}
                       >
-                        {item.label}
-                      </p>
+                        <p
+                          style={{
+                            fontSize: '0.9rem',
+                            fontWeight: 600,
+                            color: item.ok ? '#071f2a' : '#6b7a90'
+                          }}
+                        >
+                          {item.label}
+                        </p>
+                        {!item.ok && item.phase && (
+                          <span className="app-pill app-pill-gray">
+                            Phase {item.phase}
+                          </span>
+                        )}
+                      </div>
                       <p
-                        className="text-xs mt-0.5"
-                        style={{ color: 'var(--serandib-muted)' }}
+                        style={{
+                          fontSize: '0.8125rem',
+                          color: '#6b7a90',
+                          marginTop: '0.25rem',
+                          lineHeight: 1.5
+                        }}
                       >
                         {item.detail}
                       </p>
                     </div>
-                    {!item.ok && (
-                      <span className="serandib-pill serandib-pill-blue ml-auto shrink-0 text-xs">
-                        Phase 6
-                      </span>
-                    )}
                   </div>
                 ))}
               </div>
             </div>
 
             {/* SafePay Guardian */}
-            <div
-              className="mt-4 rounded-2xl p-5 text-white"
-              style={{
-                background:
-                  'linear-gradient(135deg, #061a40 0%, var(--serandib-indigo) 100%)',
-                boxShadow: '0 4px 20px rgba(6,26,64,0.2)'
-              }}
-            >
-              <div className="mb-3 flex items-center gap-2">
-                <span className="text-2xl">🛡</span>
-                <p className="font-bold">SafePay Guardian</p>
-                <span
-                  className="serandib-pill ml-auto text-xs"
+            <div className="app-card-soft">
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  marginBottom: '0.875rem'
+                }}
+              >
+                <p
                   style={{
-                    background: 'rgba(245,158,11,0.2)',
-                    color: '#fcd34d'
+                    fontWeight: 700,
+                    color: '#071f2a',
+                    fontSize: '0.9375rem'
                   }}
                 >
-                  Preview
-                </span>
+                  SafePay Guardian
+                </p>
+                <span className="app-pill app-pill-gray">Preview</span>
               </div>
-              <p className="text-sm text-white/60 mb-4">
+              <p
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#374151',
+                  lineHeight: 1.65,
+                  marginBottom: '1rem'
+                }}
+              >
                 Every transfer will be risk-scored before execution. High-risk
                 transfers will require confirmation or be flagged for review.
               </p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.5rem'
+                }}
+              >
                 {[
                   'Beneficiary trust level check',
                   'Source account freeze status',
                   'Duplicate transfer detection',
                   'Unusual amount pattern flagging'
-                ].map((s) => (
+                ].map((f) => (
                   <div
-                    key={s}
-                    className="flex items-start gap-1.5 text-white/60"
+                    key={f}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.8125rem',
+                      color: '#6b7a90'
+                    }}
                   >
-                    <span className="text-white/40">○</span> {s}
+                    <div
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        background: '#cbd5e1',
+                        flexShrink: 0
+                      }}
+                    />
+                    {f}
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Right: Audit timeline + sessions */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Audit timeline */}
-            <div className="serandib-card p-5">
-              <h2
-                className="mb-4 font-bold text-sm"
-                style={{ color: 'var(--serandib-navy)' }}
-              >
-                Audit Timeline (Preview)
-              </h2>
-              <div className="relative">
-                <div
-                  className="absolute left-3.5 top-0 bottom-0 w-px"
-                  style={{ background: 'var(--serandib-border)' }}
-                />
-                <div className="space-y-4">
-                  {timeline.map((item, i) => (
-                    <div
-                      key={i}
-                      className="relative flex items-start gap-3 pl-8"
+          {/* Right column */}
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+          >
+            {/* Audit Timeline */}
+            <div className="app-card">
+              <h3 className="app-section-title">Audit Timeline</h3>
+              <div className="app-timeline">
+                {timeline.map((item) => (
+                  <div key={item.event} className="app-timeline-item">
+                    <div className="app-timeline-dot" />
+                    <p
+                      style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: '#071f2a',
+                        lineHeight: 1.4
+                      }}
                     >
-                      <div
-                        className="absolute left-0 flex h-7 w-7 items-center justify-center rounded-full text-sm"
-                        style={{
-                          background: `${item.color}18`,
-                          border: `1.5px solid ${item.color}40`
-                        }}
-                      >
-                        {item.icon}
-                      </div>
-                      <div className="min-w-0">
-                        <p
-                          className="text-xs font-semibold"
-                          style={{ color: 'var(--serandib-navy)' }}
-                        >
-                          {item.event}
-                        </p>
-                        <p
-                          className="text-xs mt-0.5"
-                          style={{ color: 'var(--serandib-muted)' }}
-                        >
-                          {item.detail}
-                        </p>
-                        <p
-                          className="text-xs mt-0.5"
-                          style={{
-                            color: 'var(--serandib-muted)',
-                            fontSize: '0.7rem'
-                          }}
-                        >
-                          {item.time}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      {item.event}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        color: '#6b7a90',
+                        marginTop: '0.25rem',
+                        lineHeight: 1.5
+                      }}
+                    >
+                      {item.detail}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#9ca3af',
+                        marginTop: '0.25rem'
+                      }}
+                    >
+                      {item.time}
+                    </p>
+                  </div>
+                ))}
               </div>
               <p
-                className="mt-4 text-xs"
-                style={{ color: 'var(--serandib-muted)' }}
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#9ca3af',
+                  marginTop: '0.875rem',
+                  lineHeight: 1.5
+                }}
               >
                 Full audit log is stored server-side. Real-time streaming coming
-                in Phase 6.
+                in Phase 7.
               </p>
             </div>
 
-            {/* Account shield summary */}
-            <div
-              className="rounded-2xl p-5"
-              style={{
-                background: 'rgba(10,99,255,0.05)',
-                border: '1px solid var(--serandib-border)'
-              }}
-            >
-              <div className="mb-3 flex items-center gap-2">
-                <span className="text-xl">🔒</span>
-                <p
-                  className="font-bold text-sm"
-                  style={{ color: 'var(--serandib-navy)' }}
-                >
-                  Account Shield Mode
-                </p>
-              </div>
+            {/* Account Shield */}
+            <div className="app-card">
+              <h3 className="app-section-title">Account Shield Mode</h3>
               <p
-                className="text-xs leading-relaxed"
-                style={{ color: 'var(--serandib-muted)' }}
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#6b7a90',
+                  lineHeight: 1.6,
+                  marginBottom: '1rem'
+                }}
               >
                 Freeze any account to immediately block all outgoing transfers.
                 The shield activates instantly and persists across sessions.
-                Only you can unfreeze with your authenticated session.
               </p>
               <a
                 href="/bank-accounts"
-                className="mt-3 block text-xs font-semibold hover:underline"
-                style={{ color: 'var(--serandib-blue)' }}
+                className="app-button-secondary"
+                style={{
+                  display: 'inline-flex',
+                  height: 38,
+                  fontSize: '0.8125rem',
+                  padding: '0 1.125rem'
+                }}
               >
                 Manage account shield →
               </a>
             </div>
 
-            {/* Session info */}
-            <div
-              className="rounded-2xl p-5"
-              style={{
-                background: 'rgba(16,185,129,0.05)',
-                border: '1px solid rgba(16,185,129,0.15)'
-              }}
-            >
-              <p
-                className="mb-2 font-bold text-sm"
-                style={{ color: 'var(--serandib-navy)' }}
+            {/* Active Session */}
+            <div className="app-card">
+              <h3 className="app-section-title">Active Session</h3>
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: '0' }}
               >
-                Active Session
-              </p>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span style={{ color: 'var(--serandib-muted)' }}>Cookie</span>
-                  <span
-                    className="font-mono"
-                    style={{ color: 'var(--serandib-navy)' }}
+                {[
+                  { label: 'Cookie', value: 'serandib_session' },
+                  { label: 'Type', value: 'HttpOnly · Secure' },
+                  { label: 'Storage', value: 'Server-side (DB)' },
+                  { label: 'Token', value: 'SHA-256 hashed' }
+                ].map((row, i) => (
+                  <div
+                    key={row.label}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.625rem 0',
+                      borderBottom: i < 3 ? '1px solid #f1f5f8' : 'none'
+                    }}
                   >
-                    serandib_session
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: 'var(--serandib-muted)' }}>Type</span>
-                  <span style={{ color: 'var(--serandib-navy)' }}>
-                    HttpOnly · Secure
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: 'var(--serandib-muted)' }}>
-                    Storage
-                  </span>
-                  <span style={{ color: 'var(--serandib-navy)' }}>
-                    Server-side (DB)
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: 'var(--serandib-muted)' }}>
-                    Token hashing
-                  </span>
-                  <span style={{ color: 'var(--serandib-navy)' }}>SHA-256</span>
-                </div>
+                    <span style={{ fontSize: '0.8125rem', color: '#6b7a90' }}>
+                      {row.label}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: '#071f2a',
+                        fontFamily: 'monospace'
+                      }}
+                    >
+                      {row.value}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </AppShell>
   )
 }
