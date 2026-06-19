@@ -54,12 +54,18 @@ function toSafeTransaction(
   // user's source account, so they are picked up by the same scoping query and
   // shown alongside transfers with a biller-aware description.
   const type = row.type ?? 'transfer'
-  const fallbackDescription =
-    type === 'bill_payment'
-      ? `Bill payment to ${row.to_account}`
-      : direction === 'credit'
-        ? `From ${row.from_account}`
-        : `To ${row.to_account}`
+  let fallbackDescription: string
+  if (type === 'bill_payment') {
+    fallbackDescription = `Bill payment to ${row.to_account}`
+  } else if (type === 'card_purchase') {
+    fallbackDescription = `Partner purchase at ${row.to_account}`
+  } else if (type === 'invisible_savings_sweep') {
+    fallbackDescription = 'Invisible Savings monthly sweep'
+  } else if (direction === 'credit') {
+    fallbackDescription = `From ${row.from_account}`
+  } else {
+    fallbackDescription = `To ${row.to_account}`
+  }
 
   return {
     id: row.id,

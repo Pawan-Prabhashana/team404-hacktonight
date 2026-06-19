@@ -372,14 +372,26 @@ export default function EStatementPage() {
                                     background: 'rgba(16,185,129,0.1)',
                                     color: '#059669'
                                   }
-                                : {
-                                    background: 'rgba(239,68,68,0.08)',
-                                    color: '#dc2626'
-                                  }
+                                : t.type === 'card_purchase'
+                                  ? { background: '#fef3c7', color: '#92400e' }
+                                  : t.type === 'invisible_savings_sweep'
+                                    ? { background: '#dcfce7', color: '#15803d' }
+                                    : {
+                                        background: 'rgba(239,68,68,0.08)',
+                                        color: '#dc2626'
+                                      }
                             }
                           >
                             {isCredit ? <ArrowDownIcon /> : <ArrowUpIcon />}
-                            {isCredit ? 'Credit' : 'Debit'}
+                            {t.type === 'card_purchase'
+                              ? 'Card Purchase'
+                              : t.type === 'invisible_savings_sweep'
+                                ? 'Savings Sweep'
+                                : t.type === 'bill_payment'
+                                  ? 'Bill Payment'
+                                  : isCredit
+                                    ? 'Credit'
+                                    : 'Debit'}
                           </span>
                         </td>
                         <td
