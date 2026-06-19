@@ -120,6 +120,23 @@ const SecurityIcon = () => (
   </svg>
 )
 
+const SavingsIcon = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 3" />
+    <path d="M6.5 9.5C7.5 7.5 9.5 6 12 6c3.3 0 6 2.7 6 6" />
+  </svg>
+)
+
 const ShieldIcon = () => (
   <svg
     width="14"
@@ -141,6 +158,7 @@ const menuItems = [
   { label: 'Transfer', path: '/bank-transfer', Icon: TransferIcon },
   { label: 'Pay Bills', path: '/pay-bills', Icon: BillsIcon },
   { label: 'Smart Spend', path: '/smart-spend', Icon: SmartSpendIcon },
+  { label: 'Invisible Savings', path: '/invisible-savings', Icon: SavingsIcon },
   { label: 'E-Statement', path: '/e-statement', Icon: StatementIcon },
   { label: 'Security', path: '/security', Icon: SecurityIcon }
 ]

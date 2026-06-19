@@ -6,12 +6,14 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import AppShell from '@/components/layout/AppShell'
 import {
   fetchAccounts,
+  fetchInvisibleSavingsSummary,
   fetchSmartSpendSummary,
   simulateFinancialTwin,
   upsertBudget,
   type FinancialTwinResult,
+  type InvisibleSavingsSummary,
   type SafeAccount,
-  type SmartSpendSummary,
+  type SmartSpendSummary
 } from '@/lib/banking-client'
 
 // ── Small helpers ──────────────────────────────────────────────────────────
@@ -87,8 +89,9 @@ export default function SmartSpendPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  const [summary, setSummary]               = useState<SmartSpendSummary | null>(null)
-  const [accounts, setAccounts]             = useState<SafeAccount[]>([])
+  const [summary, setSummary]                     = useState<SmartSpendSummary | null>(null)
+  const [accounts, setAccounts]                   = useState<SafeAccount[]>([])
+  const [invisibleSummary, setInvisibleSummary]   = useState<InvisibleSavingsSummary | null>(null)
   const [loading, setLoading]               = useState(true)
   const [error, setError]                   = useState('')
 
@@ -118,8 +121,13 @@ export default function SmartSpendPage() {
     setLoading(true)
     setError('')
     try {
-      const [s, a] = await Promise.all([fetchSmartSpendSummary(), fetchAccounts()])
+      const [s, a, inv] = await Promise.all([
+        fetchSmartSpendSummary(),
+        fetchAccounts(),
+        fetchInvisibleSavingsSummary().catch(() => null)
+      ])
       setSummary(s)
+      setInvisibleSummary(inv)
       setAccounts(a)
     } catch {
       setError('Failed to load Smart Spend data.')
@@ -660,6 +668,62 @@ export default function SmartSpendPage() {
           </div>
 
         </div>
+
+          {/* Invisible Savings Effect */}
+          {invisibleSummary && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                border: '1px solid #bbf7d0',
+                borderRadius: 14,
+                padding: '1.5rem',
+                marginTop: '1.5rem'
+              }}
+            >
+              <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 700, color: '#14532d' }}>
+                Invisible Savings effect
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Round-ups this month
+                  </p>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '1.3rem', fontWeight: 800, color: '#15803d' }}>
+                    {invisibleSummary.capturedThisMonthDisplay}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Projected monthly
+                  </p>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '1.3rem', fontWeight: 800, color: '#15803d' }}>
+                    {invisibleSummary.projectedMonthlySavingDisplay}
+                  </p>
+                </div>
+                {invisibleSummary.topPartner && (
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      Top partner
+                    </p>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '1.1rem', fontWeight: 700, color: '#14532d' }}>
+                      {invisibleSummary.topPartner}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: '#166534', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Savings habit
+                  </p>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#14532d', lineHeight: 1.4 }}>
+                    {invisibleSummary.eventCount > 0
+                      ? `${invisibleSummary.eventCount} partner purchases captured automatically.`
+                      : 'Simulate a partner purchase to start saving.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
       </div>
 
       <style>{`

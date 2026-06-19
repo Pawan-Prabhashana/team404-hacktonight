@@ -10,9 +10,11 @@ import LoadingState from '@/components/ui/LoadingState'
 import {
   fetchAccounts,
   fetchBillPayments,
+  fetchInvisibleSavingsSummary,
   fetchNotifications,
   fetchSmartSpendSummary,
   fetchTransactions,
+  type InvisibleSavingsSummary,
   type SafeAccount,
   type SafeBillPayment,
   type SafeNotification,
@@ -258,9 +260,10 @@ export default function Dashboard() {
   const [accounts, setAccounts]           = useState<SafeAccount[]>([])
   const [transactions, setTransactions]   = useState<SafeTransaction[]>([])
   const [notifications, setNotifications] = useState<SafeNotification[]>([])
-  const [billPayments, setBillPayments]   = useState<SafeBillPayment[]>([])
-  const [spendSummary, setSpendSummary]   = useState<SmartSpendSummary | null>(null)
-  const [dataLoading, setDataLoading]     = useState(true)
+  const [billPayments, setBillPayments]       = useState<SafeBillPayment[]>([])
+  const [spendSummary, setSpendSummary]       = useState<SmartSpendSummary | null>(null)
+  const [invisibleSummary, setInvisibleSummary] = useState<InvisibleSavingsSummary | null>(null)
+  const [dataLoading, setDataLoading]         = useState(true)
 
   useEffect(() => {
     if (authLoading) return
@@ -272,18 +275,20 @@ export default function Dashboard() {
     async function load() {
       setDataLoading(true)
       try {
-        const [accts, txns, notifs, bills, spend] = await Promise.all([
+        const [accts, txns, notifs, bills, spend, invisible] = await Promise.all([
           fetchAccounts(),
           fetchTransactions({ limit: 5 }),
           fetchNotifications(),
           fetchBillPayments({ limit: 3 }),
           fetchSmartSpendSummary().catch(() => null),
+          fetchInvisibleSavingsSummary().catch(() => null)
         ])
         setAccounts(accts)
         setTransactions(txns.transactions)
         setNotifications(notifs)
         setBillPayments(bills.billPayments)
         setSpendSummary(spend)
+        setInvisibleSummary(invisible)
       } catch {
         /* non-fatal */
       } finally {
@@ -745,6 +750,43 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Invisible Savings */}
+            <div className="app-card-soft">
+              <p style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#071f2a', marginBottom: '0.875rem' }}>
+                Invisible Savings
+              </p>
+              {invisibleSummary ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Saved this month</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#15803d' }}>
+                      {invisibleSummary.capturedThisMonthDisplay}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Partner purchases</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                      {invisibleSummary.eventCount}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Next sweep</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                      {new Date(invisibleSummary.nextSweepDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p style={{ fontSize: '0.8rem', color: '#9ca3af' }}>No data yet.</p>
+              )}
+              <Link
+                href="/invisible-savings"
+                style={{ display: 'block', marginTop: '0.875rem', fontSize: '0.8125rem', fontWeight: 600, color: '#087f7a' }}
+              >
+                View Invisible Savings
+              </Link>
             </div>
 
             {/* Security */}
