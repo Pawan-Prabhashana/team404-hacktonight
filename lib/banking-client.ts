@@ -382,6 +382,155 @@ export async function markNotificationRead(
 }
 
 // ---------------------------------------------------------------------------
+// Invisible Savings types — Phase 9
+// ---------------------------------------------------------------------------
+
+export type SafePartnerMerchant = {
+  id: number
+  name: string
+  slug: string
+  category: string
+  logoUrl: string | null
+  status: string
+  minRoundupMinorUnits: number
+  maxRoundupMinorUnits: number
+}
+
+export type InvisibleSavingsSettings = {
+  id: number
+  userId: number
+  sourceAccountId: number
+  destinationAccountId: number
+  enabled: boolean
+  minRoundupMinorUnits: number
+  maxRoundupMinorUnits: number
+  sweepDay: number
+}
+
+export type SafeInvisibleSavingsEvent = {
+  id: number
+  partnerMerchantId: number
+  partnerName: string
+  purchaseAmountMinorUnits: number
+  purchaseAmountDisplay: string
+  roundupAmountMinorUnits: number
+  roundupAmountDisplay: string
+  totalDebitMinorUnits: number
+  currency: string
+  status: string
+  monthKey: string
+  createdAt: string
+}
+
+export type InvisibleSavingsSummary = {
+  monthKey: string
+  enabled: boolean
+  capturedThisMonthMinorUnits: number
+  capturedThisMonthDisplay: string
+  eventCount: number
+  averageRoundupMinorUnits: number
+  averageRoundupDisplay: string
+  projectedMonthlySavingMinorUnits: number
+  projectedMonthlySavingDisplay: string
+  topPartner: string | null
+  nextSweepDate: string
+  events: SafeInvisibleSavingsEvent[]
+}
+
+export type PartnerPurchaseReceipt = {
+  reference: string
+  partnerName: string
+  purchaseAmountMinorUnits: number
+  purchaseAmountDisplay: string
+  roundupAmountMinorUnits: number
+  roundupAmountDisplay: string
+  totalDebitMinorUnits: number
+  totalDebitDisplay: string
+  monthKey: string
+  status: 'accumulated'
+  sourceAccountId: number
+  destinationAccountId: number
+  balanceAfterDisplay: string
+  createdAt: string
+}
+
+export type InvisibleSavingsSweepReceipt = {
+  monthKey: string
+  amountMinorUnits: number
+  amountDisplay: string
+  status: 'completed' | 'no_op'
+  transactionId?: number
+  destinationAccountId: number
+  message: string
+}
+
+export async function fetchPartnerMerchants(): Promise<SafePartnerMerchant[]> {
+  const data = await apiFetch<{ partners: SafePartnerMerchant[] }>('/api/partner-merchants')
+  return data.partners
+}
+
+export async function fetchInvisibleSavingsSettings(): Promise<InvisibleSavingsSettings | null> {
+  const data = await apiFetch<{ settings: InvisibleSavingsSettings | null }>('/api/invisible-savings/settings')
+  return data.settings
+}
+
+export async function updateInvisibleSavingsSettings(input: {
+  enabled?: boolean
+  sourceAccountId?: number
+  destinationAccountId?: number
+  minRoundupAmount?: string | number
+  maxRoundupAmount?: string | number
+  sweepDay?: number
+}): Promise<InvisibleSavingsSettings> {
+  const data = await apiFetch<{ settings: InvisibleSavingsSettings }>(
+    '/api/invisible-savings/settings',
+    { method: 'PATCH', body: JSON.stringify(input) }
+  )
+  return data.settings
+}
+
+export async function fetchInvisibleSavingsSummary(params?: {
+  monthKey?: string
+}): Promise<InvisibleSavingsSummary> {
+  const qs = new URLSearchParams()
+  if (params?.monthKey) qs.set('monthKey', params.monthKey)
+  const suffix = qs.toString() ? `?${qs.toString()}` : ''
+  const data = await apiFetch<{ summary: InvisibleSavingsSummary }>(
+    `/api/invisible-savings/summary${suffix}`
+  )
+  return data.summary
+}
+
+export async function simulatePartnerPurchase(input: {
+  partnerMerchantId: number
+  sourceAccountId: number
+  purchaseAmount: string | number
+  currency?: string
+  description?: string
+}): Promise<PartnerPurchaseReceipt> {
+  const idempotencyKey = generateIdempotencyKey()
+  const data = await apiFetch<{ receipt: PartnerPurchaseReceipt }>(
+    '/api/invisible-savings/purchase',
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
+      body: JSON.stringify({ ...input, idempotencyKey })
+    }
+  )
+  return data.receipt
+}
+
+export async function sweepInvisibleSavings(input?: {
+  monthKey?: string
+}): Promise<InvisibleSavingsSweepReceipt> {
+  const data = await apiFetch<{ receipt: InvisibleSavingsSweepReceipt }>(
+    '/api/invisible-savings/sweep',
+    { method: 'POST', body: JSON.stringify(input ?? {}) }
+  )
+  return data.receipt
+}
+
+// ---------------------------------------------------------------------------
 // Smart Spend types — Phase 8
 // ---------------------------------------------------------------------------
 
