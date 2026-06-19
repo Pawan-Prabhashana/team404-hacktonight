@@ -13,6 +13,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
     }
     console.error('[smart-spend/categories]', (err as Error).message)
-    return NextResponse.json({ error: 'Failed to load categories.' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to load categories.' },
+      { status: 500 }
+    )
   }
 }

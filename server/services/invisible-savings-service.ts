@@ -80,12 +80,14 @@ export function calculateInvisibleRoundup(input: {
   minRoundupMinorUnits: number
   maxRoundupMinorUnits: number
 }): number {
-  const { purchaseAmountMinorUnits, minRoundupMinorUnits, maxRoundupMinorUnits } =
-    input
+  const {
+    purchaseAmountMinorUnits,
+    minRoundupMinorUnits,
+    maxRoundupMinorUnits
+  } = input
   // Round up to the next LKR 100 boundary (10000 minor units)
   const base = 10000
-  const nextRound =
-    (Math.floor(purchaseAmountMinorUnits / base) + 1) * base
+  const nextRound = (Math.floor(purchaseAmountMinorUnits / base) + 1) * base
   let roundup = nextRound - purchaseAmountMinorUnits
   if (roundup < minRoundupMinorUnits) roundup = minRoundupMinorUnits
   if (roundup > maxRoundupMinorUnits) roundup = maxRoundupMinorUnits
@@ -303,8 +305,7 @@ export async function processPartnerPurchase(input: {
     // ── 9. Generate reference ─────────────────────────────────────────────
     const reference = generateReference()
     const monthKey = currentMonthKey()
-    const txDescription =
-      description ?? `Partner purchase at ${merchant.name}`
+    const txDescription = description ?? `Partner purchase at ${merchant.name}`
 
     // ── 10. Create purchase transaction (card_purchase, debit) ────────────
     const txRes = await client.query<{ id: number; created_at: string }>(
@@ -332,7 +333,9 @@ export async function processPartnerPurchase(input: {
        WHERE id = $2 RETURNING balance`,
       [totalDebitDecimal, sourceAccountId]
     )
-    const balanceAfterMinor = balanceToMinor(srcAfterRes.rows[0]?.balance ?? '0')
+    const balanceAfterMinor = balanceToMinor(
+      srcAfterRes.rows[0]?.balance ?? '0'
+    )
 
     // ── 12. Ledger entry for source debit ─────────────────────────────────
     await client.query(
@@ -445,7 +448,8 @@ export async function sweepInvisibleSavingsForMonth(input: {
         'SETTINGS_NOT_FOUND'
       )
     }
-    const { destination_account_id: destId, source_account_id: srcId } = settings
+    const { destination_account_id: destId, source_account_id: srcId } =
+      settings
 
     // ── 2. Check if already swept ─────────────────────────────────────────
     const dupCheck = await client.query<{ id: number }>(

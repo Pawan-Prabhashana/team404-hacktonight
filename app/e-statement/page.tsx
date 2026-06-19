@@ -375,7 +375,10 @@ export default function EStatementPage() {
                                 : t.type === 'card_purchase'
                                   ? { background: '#fef3c7', color: '#92400e' }
                                   : t.type === 'invisible_savings_sweep'
-                                    ? { background: '#dcfce7', color: '#15803d' }
+                                    ? {
+                                        background: '#dcfce7',
+                                        color: '#15803d'
+                                      }
                                     : {
                                         background: 'rgba(239,68,68,0.08)',
                                         color: '#dc2626'

@@ -465,12 +465,16 @@ export type InvisibleSavingsSweepReceipt = {
 }
 
 export async function fetchPartnerMerchants(): Promise<SafePartnerMerchant[]> {
-  const data = await apiFetch<{ partners: SafePartnerMerchant[] }>('/api/partner-merchants')
+  const data = await apiFetch<{ partners: SafePartnerMerchant[] }>(
+    '/api/partner-merchants'
+  )
   return data.partners
 }
 
 export async function fetchInvisibleSavingsSettings(): Promise<InvisibleSavingsSettings | null> {
-  const data = await apiFetch<{ settings: InvisibleSavingsSettings | null }>('/api/invisible-savings/settings')
+  const data = await apiFetch<{ settings: InvisibleSavingsSettings | null }>(
+    '/api/invisible-savings/settings'
+  )
   return data.settings
 }
 
@@ -535,77 +539,77 @@ export async function sweepInvisibleSavings(input?: {
 // ---------------------------------------------------------------------------
 
 export type SpendCategory = {
-  id:    number
-  name:  string
-  slug:  string
+  id: number
+  name: string
+  slug: string
   color: string
-  icon:  string
+  icon: string
 }
 
 export type BudgetItem = {
-  id:               number
-  categorySlug:     string
+  id: number
+  categorySlug: string
   amountMinorUnits: number
-  currency:         string
-  period:           string
+  currency: string
+  period: string
 }
 
 export type CategoryBreakdown = {
-  slug:              string
-  name:              string
-  color:             string
-  amountMinorUnits:  number
-  amountDisplay:     string
-  percentage:        number
+  slug: string
+  name: string
+  color: string
+  amountMinorUnits: number
+  amountDisplay: string
+  percentage: number
   budgetMinorUnits?: number
-  budgetDisplay?:    string
-  budgetUsedPct?:    number
-  status:            'safe' | 'watch' | 'over'
+  budgetDisplay?: string
+  budgetUsedPct?: number
+  status: 'safe' | 'watch' | 'over'
 }
 
 export type SmartSpendSummary = {
   range: { from: string; to: string }
   metrics: {
-    financialHealthScore:         number
-    monthlySpendMinorUnits:       number
-    monthlySpendDisplay:          string
-    savingsPotentialMinorUnits:   number
-    savingsPotentialDisplay:      string
-    averageDailySpendMinorUnits:  number
-    averageDailySpendDisplay:     string
-    incomeMinorUnits:             number
-    incomeDisplay:                string
-    debitMinorUnits:              number
-    debitDisplay:                 string
-    creditMinorUnits:             number
-    creditDisplay:                string
+    financialHealthScore: number
+    monthlySpendMinorUnits: number
+    monthlySpendDisplay: string
+    savingsPotentialMinorUnits: number
+    savingsPotentialDisplay: string
+    averageDailySpendMinorUnits: number
+    averageDailySpendDisplay: string
+    incomeMinorUnits: number
+    incomeDisplay: string
+    debitMinorUnits: number
+    debitDisplay: string
+    creditMinorUnits: number
+    creditDisplay: string
   }
   categories: CategoryBreakdown[]
   insights: Array<{ type: string; title: string; message: string }>
   recurring: Array<{
-    key:                     string
-    name:                    string
+    key: string
+    name: string
     averageAmountMinorUnits: number
-    averageAmountDisplay:    string
-    nextExpectedDate?:       string
-    confidence:              number
+    averageAmountDisplay: string
+    nextExpectedDate?: string
+    confidence: number
   }>
   forecast: {
     projectedMonthEndBalanceMinorUnits: number
-    projectedMonthEndBalanceDisplay:    string
-    confidence:                         number
-    warning?:                           string
+    projectedMonthEndBalanceDisplay: string
+    confidence: number
+    warning?: string
   }
 }
 
 export type FinancialTwinResult = {
-  scenarioType:            string
-  amountDisplay:           string
-  currentBalanceDisplay:   string
+  scenarioType: string
+  amountDisplay: string
+  currentBalanceDisplay: string
   projectedBalanceDisplay: string
-  impactLevel:             'low' | 'medium' | 'high'
-  warnings:                string[]
-  recommendations:         string[]
+  impactLevel: 'low' | 'medium' | 'high'
+  warnings: string[]
+  recommendations: string[]
 }
 
 // ---------------------------------------------------------------------------
@@ -613,52 +617,69 @@ export type FinancialTwinResult = {
 // ---------------------------------------------------------------------------
 
 export async function fetchSmartSpendSummary(params?: {
-  from?:      string
-  to?:        string
+  from?: string
+  to?: string
   accountId?: number
 }): Promise<SmartSpendSummary> {
   const qs = new URLSearchParams()
-  if (params?.from)      qs.set('from', params.from)
-  if (params?.to)        qs.set('to', params.to)
-  if (params?.accountId !== undefined) qs.set('accountId', String(params.accountId))
+  if (params?.from) qs.set('from', params.from)
+  if (params?.to) qs.set('to', params.to)
+  if (params?.accountId !== undefined)
+    qs.set('accountId', String(params.accountId))
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
-  const data = await apiFetch<{ summary: SmartSpendSummary }>(`/api/smart-spend/summary${suffix}`)
+  const data = await apiFetch<{ summary: SmartSpendSummary }>(
+    `/api/smart-spend/summary${suffix}`
+  )
   return data.summary
 }
 
 export async function fetchSpendCategories(): Promise<SpendCategory[]> {
-  const data = await apiFetch<{ categories: SpendCategory[] }>('/api/smart-spend/categories')
+  const data = await apiFetch<{ categories: SpendCategory[] }>(
+    '/api/smart-spend/categories'
+  )
   return data.categories
 }
 
 export async function fetchBudgets(): Promise<BudgetItem[]> {
-  const data = await apiFetch<{ budgets: BudgetItem[] }>('/api/smart-spend/budgets')
+  const data = await apiFetch<{ budgets: BudgetItem[] }>(
+    '/api/smart-spend/budgets'
+  )
   return data.budgets
 }
 
 export async function upsertBudget(input: {
   categorySlug: string
-  amount:       string | number
-  currency?:    string
-  period?:      'monthly'
+  amount: string | number
+  currency?: string
+  period?: 'monthly'
 }): Promise<BudgetItem> {
-  const data = await apiFetch<{ budget: BudgetItem }>('/api/smart-spend/budgets', {
-    method: 'POST',
-    body:   JSON.stringify({ ...input, currency: input.currency ?? 'LKR', period: input.period ?? 'monthly' }),
-  })
+  const data = await apiFetch<{ budget: BudgetItem }>(
+    '/api/smart-spend/budgets',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        ...input,
+        currency: input.currency ?? 'LKR',
+        period: input.period ?? 'monthly'
+      })
+    }
+  )
   return data.budget
 }
 
 export async function simulateFinancialTwin(input: {
   scenarioType: 'purchase' | 'saving' | 'bill_payment' | 'transfer'
-  amount:       string | number
+  amount: string | number
   categorySlug?: string
-  accountId?:    number
-  description?:  string
+  accountId?: number
+  description?: string
 }): Promise<FinancialTwinResult> {
-  const data = await apiFetch<{ result: FinancialTwinResult }>('/api/smart-spend/simulate', {
-    method: 'POST',
-    body:   JSON.stringify(input),
-  })
+  const data = await apiFetch<{ result: FinancialTwinResult }>(
+    '/api/smart-spend/simulate',
+    {
+      method: 'POST',
+      body: JSON.stringify(input)
+    }
+  )
   return data.result
 }

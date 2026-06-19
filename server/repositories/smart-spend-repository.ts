@@ -11,48 +11,48 @@ import { ensureDatabase } from '@/lib/platform-db'
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export type AnalyticsTransaction = {
-  id:           number
-  reference:    string | null
-  type:         string
-  fromAccount:  string
-  toAccount:    string
-  amountMajor:  number          // NUMERIC(14,2) converted to JS number
-  amountMinor:  number          // amountMajor * 100, integer minor units
-  description:  string
-  status:       string
+  id: number
+  reference: string | null
+  type: string
+  fromAccount: string
+  toAccount: string
+  amountMajor: number // NUMERIC(14,2) converted to JS number
+  amountMinor: number // amountMajor * 100, integer minor units
+  description: string
+  status: string
   categorySlug: string | null
-  createdAt:    string
-  isDebit:      boolean
-  isCredit:     boolean
-  isInternal:   boolean
+  createdAt: string
+  isDebit: boolean
+  isCredit: boolean
+  isInternal: boolean
 }
 
 export type AnalyticsBillPayment = {
-  id:             number
-  reference:      string
-  amountMinor:    number          // already in minor units
-  billerName:     string
+  id: number
+  reference: string
+  amountMinor: number // already in minor units
+  billerName: string
   billerCategory: string
-  status:         string
-  createdAt:      string
+  status: string
+  createdAt: string
 }
 
 export type BudgetRow = {
-  id:                 number
-  categorySlug:       string
-  amountMinorUnits:   number
-  currency:           string
-  period:             string
+  id: number
+  categorySlug: string
+  amountMinorUnits: number
+  currency: string
+  period: string
 }
 
 export type AccountSummaryRow = {
-  id:            number
+  id: number
   accountNumber: string
-  accountName:   string
-  balanceMajor:  number
-  balanceMinor:  number
-  status:        string
-  nickname:      string | null
+  accountName: string
+  balanceMajor: number
+  balanceMinor: number
+  status: string
+  nickname: string | null
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -68,9 +68,9 @@ function toMinor(major: number | string): number {
  * Marks each row as debit/credit/internal relative to the user's accounts.
  */
 export async function listUserTransactionsForAnalytics(input: {
-  userId:    number
-  from:      string
-  to:        string
+  userId: number
+  from: string
+  to: string
   accountId?: number
 }): Promise<AnalyticsTransaction[]> {
   await ensureDatabase()
@@ -78,7 +78,7 @@ export async function listUserTransactionsForAnalytics(input: {
 
   const acctResult = await query<{ account_number: string }>(
     `SELECT account_number FROM accounts WHERE user_id = $1`,
-    [userId],
+    [userId]
   )
   const userAccountNumbers = acctResult.rows.map((r) => r.account_number)
   if (userAccountNumbers.length === 0) return []
@@ -87,7 +87,7 @@ export async function listUserTransactionsForAnalytics(input: {
   if (accountId !== undefined) {
     const owned = await query<{ account_number: string }>(
       `SELECT account_number FROM accounts WHERE id = $1 AND user_id = $2 LIMIT 1`,
-      [accountId, userId],
+      [accountId, userId]
     )
     if (!owned.rows[0]) return []
     filterNumbers = [owned.rows[0].account_number]
@@ -112,31 +112,31 @@ export async function listUserTransactionsForAnalytics(input: {
        AND created_at >= $2
        AND created_at <  $3
      ORDER BY created_at DESC`,
-    [filterNumbers, from, to],
+    [filterNumbers, from, to]
   )
 
   const userSet = new Set(userAccountNumbers)
 
   return result.rows.map((row) => {
-    const major    = Number(row.amount)
-    const minor    = toMinor(major)
-    const isDebit  = userSet.has(row.from_account)
+    const major = Number(row.amount)
+    const minor = toMinor(major)
+    const isDebit = userSet.has(row.from_account)
     const isCredit = userSet.has(row.to_account)
     return {
-      id:           row.id,
-      reference:    row.reference,
-      type:         row.type ?? 'transfer',
-      fromAccount:  row.from_account,
-      toAccount:    row.to_account,
-      amountMajor:  major,
-      amountMinor:  minor,
-      description:  row.description ?? '',
-      status:       row.status,
+      id: row.id,
+      reference: row.reference,
+      type: row.type ?? 'transfer',
+      fromAccount: row.from_account,
+      toAccount: row.to_account,
+      amountMajor: major,
+      amountMinor: minor,
+      description: row.description ?? '',
+      status: row.status,
       categorySlug: row.category_slug,
-      createdAt:    row.created_at,
-      isDebit:      isDebit && !isCredit,  // pure outflow
-      isCredit:     isCredit && !isDebit,  // pure inflow
-      isInternal:   isDebit && isCredit,   // between own accounts
+      createdAt: row.created_at,
+      isDebit: isDebit && !isCredit, // pure outflow
+      isCredit: isCredit && !isDebit, // pure inflow
+      isInternal: isDebit && isCredit // between own accounts
     }
   })
 }
@@ -145,9 +145,9 @@ export async function listUserTransactionsForAnalytics(input: {
  * Return completed bill payments for the user in the given date range.
  */
 export async function listUserBillPaymentsForAnalytics(input: {
-  userId:     number
-  from:       string
-  to:         string
+  userId: number
+  from: string
+  to: string
   accountId?: number
 }): Promise<AnalyticsBillPayment[]> {
   await ensureDatabase()
@@ -179,17 +179,17 @@ export async function listUserBillPaymentsForAnalytics(input: {
        AND bp.created_at <  $3
        AND bp.status = 'completed'${extra}
      ORDER BY bp.created_at DESC`,
-    params,
+    params
   )
 
   return result.rows.map((row) => ({
-    id:             row.id,
-    reference:      row.reference,
-    amountMinor:    Number(row.amount_minor_units),
-    billerName:     row.biller_name,
+    id: row.id,
+    reference: row.reference,
+    amountMinor: Number(row.amount_minor_units),
+    billerName: row.biller_name,
     billerCategory: row.biller_category,
-    status:         row.status,
-    createdAt:      row.created_at,
+    status: row.status,
+    createdAt: row.created_at
   }))
 }
 
@@ -197,7 +197,7 @@ export async function listUserBillPaymentsForAnalytics(input: {
  * Return all active accounts for the user with balances.
  */
 export async function listUserAccountsForAnalytics(
-  userId: number,
+  userId: number
 ): Promise<AccountSummaryRow[]> {
   await ensureDatabase()
   const result = await query<{
@@ -212,16 +212,16 @@ export async function listUserAccountsForAnalytics(
      FROM accounts
      WHERE user_id = $1 AND status = 'active'
      ORDER BY id`,
-    [userId],
+    [userId]
   )
   return result.rows.map((row) => ({
-    id:            row.id,
+    id: row.id,
     accountNumber: row.account_number,
-    accountName:   row.account_name,
-    balanceMajor:  Number(row.balance),
-    balanceMinor:  toMinor(row.balance),
-    status:        row.status,
-    nickname:      row.nickname,
+    accountName: row.account_name,
+    balanceMajor: Number(row.balance),
+    balanceMinor: toMinor(row.balance),
+    status: row.status,
+    nickname: row.nickname
   }))
 }
 
@@ -241,14 +241,14 @@ export async function listBudgetsForUser(userId: number): Promise<BudgetRow[]> {
      FROM budgets
      WHERE user_id = $1
      ORDER BY category_slug`,
-    [userId],
+    [userId]
   )
   return result.rows.map((row) => ({
-    id:               row.id,
-    categorySlug:     row.category_slug,
+    id: row.id,
+    categorySlug: row.category_slug,
     amountMinorUnits: Number(row.amount_minor_units),
-    currency:         row.currency,
-    period:           row.period,
+    currency: row.currency,
+    period: row.period
   }))
 }
 
@@ -256,11 +256,11 @@ export async function listBudgetsForUser(userId: number): Promise<BudgetRow[]> {
  * Upsert (create or update) a monthly budget for the user.
  */
 export async function upsertBudgetForUser(input: {
-  userId:           number
-  categorySlug:     string
+  userId: number
+  categorySlug: string
   amountMinorUnits: number
-  currency:         string
-  period:           'monthly'
+  currency: string
+  period: 'monthly'
 }): Promise<BudgetRow> {
   await ensureDatabase()
   const { userId, categorySlug, amountMinorUnits, currency, period } = input
@@ -277,15 +277,15 @@ export async function upsertBudgetForUser(input: {
      DO UPDATE SET amount_minor_units = EXCLUDED.amount_minor_units,
                    updated_at         = NOW()
      RETURNING id, category_slug, amount_minor_units, currency, period`,
-    [userId, categorySlug, amountMinorUnits, currency, period],
+    [userId, categorySlug, amountMinorUnits, currency, period]
   )
   const row = result.rows[0]
   return {
-    id:               row.id,
-    categorySlug:     row.category_slug,
+    id: row.id,
+    categorySlug: row.category_slug,
     amountMinorUnits: Number(row.amount_minor_units),
-    currency:         row.currency,
-    period:           row.period,
+    currency: row.currency,
+    period: row.period
   }
 }
 
@@ -302,6 +302,9 @@ export async function listSpendCategories(): Promise<
     slug: string
     color: string
     icon: string
-  }>(`SELECT id, name, slug, color, icon FROM spend_categories ORDER BY name`, [])
+  }>(
+    `SELECT id, name, slug, color, icon FROM spend_categories ORDER BY name`,
+    []
+  )
   return result.rows
 }

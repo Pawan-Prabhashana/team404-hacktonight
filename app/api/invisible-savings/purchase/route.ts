@@ -16,11 +16,11 @@ import { toMinorUnits } from '@/lib/money'
 import { ensureDatabase } from '@/lib/platform-db'
 import { getCurrentUser } from '@/lib/session'
 import { BankingError } from '@/server/errors/banking-errors'
-import { processPartnerPurchase } from '@/server/services/invisible-savings-service'
 import {
   parseBody,
   simulatePartnerPurchaseSchema
 } from '@/server/schemas/invisible-savings-schemas'
+import { processPartnerPurchase } from '@/server/services/invisible-savings-service'
 
 export async function POST(request: Request) {
   try {
@@ -31,9 +31,17 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}))
     const parsed = parseBody(simulatePartnerPurchaseSchema, body)
-    if (parsed.data === null) return badRequest(parsed.error ?? 'Validation error.')
+    if (parsed.data === null)
+      return badRequest(parsed.error ?? 'Validation error.')
 
-    const { partnerMerchantId, sourceAccountId, purchaseAmount, currency, description, idempotencyKey } = parsed.data
+    const {
+      partnerMerchantId,
+      sourceAccountId,
+      purchaseAmount,
+      currency,
+      description,
+      idempotencyKey
+    } = parsed.data
 
     let purchaseAmountMinorUnits: number
     try {
@@ -41,11 +49,17 @@ export async function POST(request: Request) {
     } catch {
       return badRequest('Purchase amount must be a positive number.')
     }
-    if (purchaseAmountMinorUnits <= 0) return badRequest('Purchase amount must be greater than zero.')
-    if (purchaseAmountMinorUnits > 10_000_000_00) return badRequest('Purchase amount exceeds the limit.')
+    if (purchaseAmountMinorUnits <= 0)
+      return badRequest('Purchase amount must be greater than zero.')
+    if (purchaseAmountMinorUnits > 10_000_000_00)
+      return badRequest('Purchase amount exceeds the limit.')
 
-    const resolvedKey = idempotencyKey ?? (request.headers.get('Idempotency-Key') || undefined)
-    const ipAddress = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? null
+    const resolvedKey =
+      idempotencyKey ?? (request.headers.get('Idempotency-Key') || undefined)
+    const ipAddress =
+      request.headers.get('x-forwarded-for') ??
+      request.headers.get('x-real-ip') ??
+      null
     const userAgent = request.headers.get('user-agent')
 
     const receipt = await processPartnerPurchase({
@@ -65,10 +79,17 @@ export async function POST(request: Request) {
     if (err instanceof UnauthorizedError) return unauthorized()
     if (err instanceof ForbiddenError) return forbidden()
     if (err instanceof BankingError) {
-      const status = err.statusCode === 404 ? 404 : err.statusCode === 403 ? 403 : 400
-      return NextResponse.json({ error: err.message, code: err.code }, { status })
+      const status =
+        err.statusCode === 404 ? 404 : err.statusCode === 403 ? 403 : 400
+      return NextResponse.json(
+        { error: err.message, code: err.code },
+        { status }
+      )
     }
-    console.error('[api/invisible-savings/purchase POST]', (err as Error).message)
+    console.error(
+      '[api/invisible-savings/purchase POST]',
+      (err as Error).message
+    )
     return serverError()
   }
 }

@@ -42,9 +42,7 @@ export async function GET(request: Request) {
     ).getDate()
     const projected =
       dayOfMonth > 0 && raw.capturedMinorUnits > 0
-        ? Math.round(
-            (raw.capturedMinorUnits / dayOfMonth) * daysInMonth
-          )
+        ? Math.round((raw.capturedMinorUnits / dayOfMonth) * daysInMonth)
         : 0
 
     // Estimate next sweep day
@@ -53,7 +51,9 @@ export async function GET(request: Request) {
     const nextSweep = new Date(
       Date.UTC(
         now.getUTCFullYear(),
-        sweepDay <= now.getUTCDate() ? now.getUTCMonth() + 1 : now.getUTCMonth(),
+        sweepDay <= now.getUTCDate()
+          ? now.getUTCMonth() + 1
+          : now.getUTCMonth(),
         sweepDay
       )
     )
@@ -66,7 +66,10 @@ export async function GET(request: Request) {
         capturedThisMonthDisplay: formatCurrency(raw.capturedMinorUnits, 'LKR'),
         eventCount: raw.eventCount,
         averageRoundupMinorUnits: raw.averageRoundupMinorUnits,
-        averageRoundupDisplay: formatCurrency(raw.averageRoundupMinorUnits, 'LKR'),
+        averageRoundupDisplay: formatCurrency(
+          raw.averageRoundupMinorUnits,
+          'LKR'
+        ),
         projectedMonthlySavingMinorUnits: projected,
         projectedMonthlySavingDisplay: formatCurrency(projected, 'LKR'),
         topPartner: raw.topPartner,

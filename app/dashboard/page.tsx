@@ -257,13 +257,16 @@ export default function Dashboard() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
 
-  const [accounts, setAccounts]           = useState<SafeAccount[]>([])
-  const [transactions, setTransactions]   = useState<SafeTransaction[]>([])
+  const [accounts, setAccounts] = useState<SafeAccount[]>([])
+  const [transactions, setTransactions] = useState<SafeTransaction[]>([])
   const [notifications, setNotifications] = useState<SafeNotification[]>([])
-  const [billPayments, setBillPayments]       = useState<SafeBillPayment[]>([])
-  const [spendSummary, setSpendSummary]       = useState<SmartSpendSummary | null>(null)
-  const [invisibleSummary, setInvisibleSummary] = useState<InvisibleSavingsSummary | null>(null)
-  const [dataLoading, setDataLoading]         = useState(true)
+  const [billPayments, setBillPayments] = useState<SafeBillPayment[]>([])
+  const [spendSummary, setSpendSummary] = useState<SmartSpendSummary | null>(
+    null
+  )
+  const [invisibleSummary, setInvisibleSummary] =
+    useState<InvisibleSavingsSummary | null>(null)
+  const [dataLoading, setDataLoading] = useState(true)
 
   useEffect(() => {
     if (authLoading) return
@@ -275,14 +278,15 @@ export default function Dashboard() {
     async function load() {
       setDataLoading(true)
       try {
-        const [accts, txns, notifs, bills, spend, invisible] = await Promise.all([
-          fetchAccounts(),
-          fetchTransactions({ limit: 5 }),
-          fetchNotifications(),
-          fetchBillPayments({ limit: 3 }),
-          fetchSmartSpendSummary().catch(() => null),
-          fetchInvisibleSavingsSummary().catch(() => null)
-        ])
+        const [accts, txns, notifs, bills, spend, invisible] =
+          await Promise.all([
+            fetchAccounts(),
+            fetchTransactions({ limit: 5 }),
+            fetchNotifications(),
+            fetchBillPayments({ limit: 3 }),
+            fetchSmartSpendSummary().catch(() => null),
+            fetchInvisibleSavingsSummary().catch(() => null)
+          ])
         setAccounts(accts)
         setTransactions(txns.transactions)
         setNotifications(notifs)
@@ -597,7 +601,9 @@ export default function Dashboard() {
                   letterSpacing: '-0.03em'
                 }}
               >
-                {dataLoading ? '—' : (spendSummary?.metrics.financialHealthScore ?? '—')}
+                {dataLoading
+                  ? '—'
+                  : (spendSummary?.metrics.financialHealthScore ?? '—')}
               </p>
               <p
                 style={{
@@ -623,7 +629,7 @@ export default function Dashboard() {
                     borderRadius: 9999,
                     background: 'rgba(255,255,255,0.7)',
                     width: `${spendSummary?.metrics.financialHealthScore ?? 0}%`,
-                    transition: 'width 0.5s ease',
+                    transition: 'width 0.5s ease'
                   }}
                 />
               </div>
@@ -634,7 +640,7 @@ export default function Dashboard() {
                     fontSize: '0.75rem',
                     color: 'rgba(255,255,255,0.55)',
                     marginTop: '0.625rem',
-                    lineHeight: 1.45,
+                    lineHeight: 1.45
                   }}
                 >
                   {spendSummary.insights[0].message}
@@ -642,17 +648,17 @@ export default function Dashboard() {
               )}
               {/* Savings potential */}
               {spendSummary?.metrics.savingsPotentialMinorUnits !== undefined &&
-               spendSummary.metrics.savingsPotentialMinorUnits > 0 && (
-                <p
-                  style={{
-                    fontSize: '0.75rem',
-                    color: 'rgba(255,255,255,0.45)',
-                    marginTop: '0.375rem',
-                  }}
-                >
-                  Save up to {spendSummary.metrics.savingsPotentialDisplay}
-                </p>
-              )}
+                spendSummary.metrics.savingsPotentialMinorUnits > 0 && (
+                  <p
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255,255,255,0.45)',
+                      marginTop: '0.375rem'
+                    }}
+                  >
+                    Save up to {spendSummary.metrics.savingsPotentialDisplay}
+                  </p>
+                )}
               <Link
                 href="/smart-spend"
                 style={{
@@ -754,36 +760,104 @@ export default function Dashboard() {
 
             {/* Invisible Savings */}
             <div className="app-card-soft">
-              <p style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#071f2a', marginBottom: '0.875rem' }}>
+              <p
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 700,
+                  color: '#071f2a',
+                  marginBottom: '0.875rem'
+                }}
+              >
                 Invisible Savings
               </p>
               {invisibleSummary ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Saved this month</span>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#15803d' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                      Saved this month
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.9rem',
+                        fontWeight: 800,
+                        color: '#15803d'
+                      }}
+                    >
                       {invisibleSummary.capturedThisMonthDisplay}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Partner purchases</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                      Partner purchases
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: '#374151'
+                      }}
+                    >
                       {invisibleSummary.eventCount}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Next sweep</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
-                      {new Date(invisibleSummary.nextSweepDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                      Next sweep
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: '#374151'
+                      }}
+                    >
+                      {new Date(
+                        invisibleSummary.nextSweepDate
+                      ).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short'
+                      })}
                     </span>
                   </div>
                 </div>
               ) : (
-                <p style={{ fontSize: '0.8rem', color: '#9ca3af' }}>No data yet.</p>
+                <p style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+                  No data yet.
+                </p>
               )}
               <Link
                 href="/invisible-savings"
-                style={{ display: 'block', marginTop: '0.875rem', fontSize: '0.8125rem', fontWeight: 600, color: '#087f7a' }}
+                style={{
+                  display: 'block',
+                  marginTop: '0.875rem',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: '#087f7a'
+                }}
               >
                 View Invisible Savings
               </Link>

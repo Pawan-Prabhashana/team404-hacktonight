@@ -1,26 +1,26 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
-import { AuthError } from '@/lib/banking-client'
 import type {
-  InvisibleSavingsSummary,
   InvisibleSavingsSettings,
-  PartnerPurchaseReceipt,
+  InvisibleSavingsSummary,
   InvisibleSavingsSweepReceipt,
-  SafePartnerMerchant,
-  SafeAccount
+  PartnerPurchaseReceipt,
+  SafeAccount,
+  SafePartnerMerchant
 } from '@/lib/banking-client'
 import {
-  fetchPartnerMerchants,
-  fetchInvisibleSavingsSummary,
+  AuthError,
+  fetchAccounts,
   fetchInvisibleSavingsSettings,
-  updateInvisibleSavingsSettings,
+  fetchInvisibleSavingsSummary,
+  fetchPartnerMerchants,
   simulatePartnerPurchase,
   sweepInvisibleSavings,
-  fetchAccounts
+  updateInvisibleSavingsSettings
 } from '@/lib/banking-client'
-import { useRouter } from 'next/navigation'
 
 // ---------------------------------------------------------------------------
 // Partner badge (initials fallback — no external logos)
@@ -99,7 +99,9 @@ export default function InvisibleSavingsPage() {
   const [partners, setPartners] = useState<SafePartnerMerchant[]>([])
   const [accounts, setAccounts] = useState<SafeAccount[]>([])
   const [summary, setSummary] = useState<InvisibleSavingsSummary | null>(null)
-  const [settings, setSettings] = useState<InvisibleSavingsSettings | null>(null)
+  const [settings, setSettings] = useState<InvisibleSavingsSettings | null>(
+    null
+  )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -109,7 +111,8 @@ export default function InvisibleSavingsPage() {
   const [purchaseAmount, setPurchaseAmount] = useState('')
   const [purchaseDesc, setPurchaseDesc] = useState('')
   const [purchasing, setPurchasing] = useState(false)
-  const [purchaseReceipt, setPurchaseReceipt] = useState<PartnerPurchaseReceipt | null>(null)
+  const [purchaseReceipt, setPurchaseReceipt] =
+    useState<PartnerPurchaseReceipt | null>(null)
   const [purchaseError, setPurchaseError] = useState<string | null>(null)
 
   // Settings form
@@ -121,7 +124,8 @@ export default function InvisibleSavingsPage() {
 
   // Sweep
   const [sweeping, setSweeping] = useState(false)
-  const [sweepReceipt, setSweepReceipt] = useState<InvisibleSavingsSweepReceipt | null>(null)
+  const [sweepReceipt, setSweepReceipt] =
+    useState<InvisibleSavingsSweepReceipt | null>(null)
   const [sweepError, setSweepError] = useState<string | null>(null)
 
   async function loadAll() {
@@ -223,7 +227,9 @@ export default function InvisibleSavingsPage() {
       setSettings(updated)
       setSettingsMsg('Settings saved.')
     } catch (err) {
-      setSettingsMsg(err instanceof Error ? err.message : 'Failed to save settings.')
+      setSettingsMsg(
+        err instanceof Error ? err.message : 'Failed to save settings.'
+      )
     } finally {
       setSettingsSaving(false)
     }
@@ -232,7 +238,13 @@ export default function InvisibleSavingsPage() {
   if (loading) {
     return (
       <AppShell>
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <div
+          style={{
+            padding: '3rem',
+            textAlign: 'center',
+            color: 'var(--text-muted)'
+          }}
+        >
           Loading Invisible Savings...
         </div>
       </AppShell>
@@ -242,30 +254,49 @@ export default function InvisibleSavingsPage() {
   if (error) {
     return (
       <AppShell>
-        <div style={{ padding: '3rem', textAlign: 'center', color: '#ef4444' }}>{error}</div>
+        <div style={{ padding: '3rem', textAlign: 'center', color: '#ef4444' }}>
+          {error}
+        </div>
       </AppShell>
     )
   }
 
-  const selectedMerchant = partners.find((p) => p.id === Number(selectedMerchantId))
+  const selectedMerchant = partners.find(
+    (p) => p.id === Number(selectedMerchantId)
+  )
 
   return (
     <AppShell>
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1.5rem' }}>
         {/* ── Page header ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+          <h1
+            style={{
+              fontSize: '1.75rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              margin: 0
+            }}
+          >
             Invisible Savings
           </h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '0.4rem', fontSize: '0.95rem' }}>
-            Save tiny amounts from everyday partner purchases without feeling it.
+          <p
+            style={{
+              color: 'var(--text-muted)',
+              marginTop: '0.4rem',
+              fontSize: '0.95rem'
+            }}
+          >
+            Save tiny amounts from everyday partner purchases without feeling
+            it.
           </p>
         </div>
 
         {/* ── Hero summary card ─────────────────────────────────────────── */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)',
+            background:
+              'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)',
             borderRadius: 16,
             padding: '1.75rem 2rem',
             color: '#fff',
@@ -276,47 +307,118 @@ export default function InvisibleSavingsPage() {
           }}
         >
           <div>
-            <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '0.78rem',
+                opacity: 0.7,
+                textTransform: 'uppercase',
+                letterSpacing: 1
+              }}
+            >
               Saved this month
             </p>
-            <p style={{ margin: '0.3rem 0 0', fontSize: '1.6rem', fontWeight: 800 }}>
+            <p
+              style={{
+                margin: '0.3rem 0 0',
+                fontSize: '1.6rem',
+                fontWeight: 800
+              }}
+            >
               {summary?.capturedThisMonthDisplay ?? 'LKR 0.00'}
             </p>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '0.78rem',
+                opacity: 0.7,
+                textTransform: 'uppercase',
+                letterSpacing: 1
+              }}
+            >
               Events captured
             </p>
-            <p style={{ margin: '0.3rem 0 0', fontSize: '1.6rem', fontWeight: 800 }}>
+            <p
+              style={{
+                margin: '0.3rem 0 0',
+                fontSize: '1.6rem',
+                fontWeight: 800
+              }}
+            >
               {summary?.eventCount ?? 0}
             </p>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '0.78rem',
+                opacity: 0.7,
+                textTransform: 'uppercase',
+                letterSpacing: 1
+              }}
+            >
               Projected monthly
             </p>
-            <p style={{ margin: '0.3rem 0 0', fontSize: '1.6rem', fontWeight: 800 }}>
+            <p
+              style={{
+                margin: '0.3rem 0 0',
+                fontSize: '1.6rem',
+                fontWeight: 800
+              }}
+            >
               {summary?.projectedMonthlySavingDisplay ?? 'LKR 0.00'}
             </p>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '0.78rem',
+                opacity: 0.7,
+                textTransform: 'uppercase',
+                letterSpacing: 1
+              }}
+            >
               Next sweep
             </p>
-            <p style={{ margin: '0.3rem 0 0', fontSize: '1.2rem', fontWeight: 700 }}>
+            <p
+              style={{
+                margin: '0.3rem 0 0',
+                fontSize: '1.2rem',
+                fontWeight: 700
+              }}
+            >
               {summary?.nextSweepDate
                 ? new Date(summary.nextSweepDate).toLocaleDateString('en-GB', {
-                    day: 'numeric', month: 'short'
+                    day: 'numeric',
+                    month: 'short'
                   })
                 : '—'}
             </p>
           </div>
           {summary?.topPartner && (
             <div>
-              <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1 }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: '0.78rem',
+                  opacity: 0.7,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1
+                }}
+              >
                 Top partner
               </p>
-              <p style={{ margin: '0.3rem 0 0', fontSize: '1.1rem', fontWeight: 700 }}>
+              <p
+                style={{
+                  margin: '0.3rem 0 0',
+                  fontSize: '1.1rem',
+                  fontWeight: 700
+                }}
+              >
                 {summary.topPartner}
               </p>
             </div>
@@ -333,14 +435,30 @@ export default function InvisibleSavingsPage() {
             marginBottom: '2rem'
           }}
         >
-          <h2 style={{ margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2
+            style={{
+              margin: '0 0 1.25rem',
+              fontSize: '1rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)'
+            }}
+          >
             How it works
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '1rem'
+            }}
+          >
             {[
               { step: '1', text: 'Pay at a partner café or restaurant' },
               { step: '2', text: 'Serandib rounds up LKR 20–50 automatically' },
-              { step: '3', text: 'Month-end sweep moves savings to your Savings account' }
+              {
+                step: '3',
+                text: 'Month-end sweep moves savings to your Savings account'
+              }
             ].map(({ step, text }) => (
               <div
                 key={step}
@@ -370,7 +488,14 @@ export default function InvisibleSavingsPage() {
                 >
                   {step}
                 </div>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '0.875rem',
+                    color: 'var(--text-primary)',
+                    lineHeight: 1.5
+                  }}
+                >
                   {text}
                 </p>
               </div>
@@ -388,12 +513,26 @@ export default function InvisibleSavingsPage() {
             marginBottom: '2rem'
           }}
         >
-          <h2 style={{ margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2
+            style={{
+              margin: '0 0 1.25rem',
+              fontSize: '1rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)'
+            }}
+          >
             Partner merchants
           </h2>
-          <p style={{ margin: '0 0 1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Partner logo cards use local assets when provided. If official logo assets are not available in the
-            repository, Serandib Bank uses neutral text-based partner badges for demo purposes.
+          <p
+            style={{
+              margin: '0 0 1rem',
+              fontSize: '0.8rem',
+              color: 'var(--text-muted)'
+            }}
+          >
+            Partner logo cards use local assets when provided. If official logo
+            assets are not available in the repository, Serandib Bank uses
+            neutral text-based partner badges for demo purposes.
           </p>
           <div
             style={{
@@ -419,7 +558,10 @@ export default function InvisibleSavingsPage() {
                   padding: '1rem 0.75rem',
                   borderRadius: 12,
                   border: `2px solid ${selectedMerchantId === p.id ? '#0f3460' : 'var(--border)'}`,
-                  background: selectedMerchantId === p.id ? '#f0f4ff' : 'var(--bg, #f9fafb)',
+                  background:
+                    selectedMerchantId === p.id
+                      ? '#f0f4ff'
+                      : 'var(--bg, #f9fafb)',
                   cursor: 'pointer',
                   transition: 'all 0.15s'
                 }}
@@ -436,7 +578,9 @@ export default function InvisibleSavingsPage() {
                 >
                   {p.name}
                 </span>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                <span
+                  style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}
+                >
                   {p.category.replace(/_/g, ' ')}
                 </span>
               </button>
@@ -454,12 +598,26 @@ export default function InvisibleSavingsPage() {
             marginBottom: '2rem'
           }}
         >
-          <h2 style={{ margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2
+            style={{
+              margin: '0 0 1.25rem',
+              fontSize: '1rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)'
+            }}
+          >
             Simulate a partner purchase
           </h2>
 
           {/* Preset buttons */}
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              flexWrap: 'wrap',
+              marginBottom: '1.25rem'
+            }}
+          >
             {PRESETS.map((pre) => (
               <button
                 key={pre.label}
@@ -474,8 +632,14 @@ export default function InvisibleSavingsPage() {
                   padding: '0.4rem 0.9rem',
                   borderRadius: 8,
                   border: '1px solid var(--border)',
-                  background: purchaseAmount === pre.amount ? '#0f3460' : 'var(--bg, #f9fafb)',
-                  color: purchaseAmount === pre.amount ? '#fff' : 'var(--text-primary)',
+                  background:
+                    purchaseAmount === pre.amount
+                      ? '#0f3460'
+                      : 'var(--bg, #f9fafb)',
+                  color:
+                    purchaseAmount === pre.amount
+                      ? '#fff'
+                      : 'var(--text-primary)',
                   fontSize: '0.8rem',
                   fontWeight: 600,
                   cursor: 'pointer'
@@ -486,15 +650,34 @@ export default function InvisibleSavingsPage() {
             ))}
           </div>
 
-          <form onSubmit={handlePurchase} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <form
+            onSubmit={handlePurchase}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem'
+              }}
+            >
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: 'var(--text-muted)',
+                    display: 'block',
+                    marginBottom: 6
+                  }}
+                >
                   Partner
                 </label>
                 <select
                   value={selectedMerchantId}
-                  onChange={(e) => setSelectedMerchantId(Number(e.target.value))}
+                  onChange={(e) =>
+                    setSelectedMerchantId(Number(e.target.value))
+                  }
                   required
                   style={{
                     width: '100%',
@@ -516,7 +699,15 @@ export default function InvisibleSavingsPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: 'var(--text-muted)',
+                    display: 'block',
+                    marginBottom: 6
+                  }}
+                >
                   Debit from account
                 </label>
                 <select
@@ -543,9 +734,23 @@ export default function InvisibleSavingsPage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem'
+              }}
+            >
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: 'var(--text-muted)',
+                    display: 'block',
+                    marginBottom: 6
+                  }}
+                >
                   Purchase amount (LKR)
                 </label>
                 <input
@@ -574,7 +779,15 @@ export default function InvisibleSavingsPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: 'var(--text-muted)',
+                    display: 'block',
+                    marginBottom: 6
+                  }}
+                >
                   Description (optional)
                 </label>
                 <input
@@ -612,11 +825,13 @@ export default function InvisibleSavingsPage() {
                 }}
               >
                 <span>
-                  <strong>Purchase:</strong> LKR {Number(purchaseAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  <strong>Purchase:</strong> LKR{' '}
+                  {Number(purchaseAmount).toLocaleString('en-US', {
+                    minimumFractionDigits: 2
+                  })}
                 </span>
                 <span style={{ color: '#15803d', fontWeight: 600 }}>
-                  + Invisible saving: LKR{' '}
-                  {(() => {
+                  + Invisible saving: LKR {(() => {
                     const minor = Math.round(Number(purchaseAmount) * 100)
                     const base = 10000
                     const next = (Math.floor(minor / base) + 1) * base
@@ -627,15 +842,16 @@ export default function InvisibleSavingsPage() {
                   })()}
                 </span>
                 <span style={{ color: '#1e40af', fontWeight: 700 }}>
-                  Total debit: LKR{' '}
-                  {(() => {
+                  Total debit: LKR {(() => {
                     const minor = Math.round(Number(purchaseAmount) * 100)
                     const base = 10000
                     const next = (Math.floor(minor / base) + 1) * base
                     let ru = next - minor
                     if (ru < 2000) ru = 2000
                     if (ru > 5000) ru = 5000
-                    return ((minor + ru) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })
+                    return ((minor + ru) / 100).toLocaleString('en-US', {
+                      minimumFractionDigits: 2
+                    })
                   })()}
                 </span>
               </div>
@@ -686,29 +902,76 @@ export default function InvisibleSavingsPage() {
                 padding: '1.25rem'
               }}
             >
-              <p style={{ margin: '0 0 0.75rem', fontWeight: 700, color: '#15803d', fontSize: '0.9rem' }}>
+              <p
+                style={{
+                  margin: '0 0 0.75rem',
+                  fontWeight: 700,
+                  color: '#15803d',
+                  fontSize: '0.9rem'
+                }}
+              >
                 Purchase recorded — invisible saving captured
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                  gap: '0.75rem'
+                }}
+              >
                 {[
                   { label: 'Partner', value: purchaseReceipt.partnerName },
-                  { label: 'Purchase', value: purchaseReceipt.purchaseAmountDisplay },
-                  { label: 'Invisible saving', value: purchaseReceipt.roundupAmountDisplay },
-                  { label: 'Total debited', value: purchaseReceipt.totalDebitDisplay },
+                  {
+                    label: 'Purchase',
+                    value: purchaseReceipt.purchaseAmountDisplay
+                  },
+                  {
+                    label: 'Invisible saving',
+                    value: purchaseReceipt.roundupAmountDisplay
+                  },
+                  {
+                    label: 'Total debited',
+                    value: purchaseReceipt.totalDebitDisplay
+                  },
                   { label: 'Month', value: purchaseReceipt.monthKey },
-                  { label: 'Balance after', value: purchaseReceipt.balanceAfterDisplay }
+                  {
+                    label: 'Balance after',
+                    value: purchaseReceipt.balanceAfterDisplay
+                  }
                 ].map(({ label, value }) => (
                   <div key={label}>
-                    <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.72rem',
+                        color: '#64748b',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5
+                      }}
+                    >
                       {label}
                     </p>
-                    <p style={{ margin: '0.15rem 0 0', fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
+                    <p
+                      style={{
+                        margin: '0.15rem 0 0',
+                        fontWeight: 700,
+                        color: '#1e293b',
+                        fontSize: '0.9rem'
+                      }}
+                    >
                       {value}
                     </p>
                   </div>
                 ))}
               </div>
-              <p style={{ margin: '0.75rem 0 0', fontSize: '0.8rem', color: '#16a34a' }}>
+              <p
+                style={{
+                  margin: '0.75rem 0 0',
+                  fontSize: '0.8rem',
+                  color: '#16a34a'
+                }}
+              >
                 Status: Accumulated for month-end sweep into Savings account.
               </p>
             </div>
@@ -725,11 +988,25 @@ export default function InvisibleSavingsPage() {
             marginBottom: '2rem'
           }}
         >
-          <h2 style={{ margin: '0 0 0.5rem', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2
+            style={{
+              margin: '0 0 0.5rem',
+              fontSize: '1rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)'
+            }}
+          >
             Month-end sweep
           </h2>
-          <p style={{ margin: '0 0 1.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            Move this month&apos;s accumulated invisible savings into your Savings account. Normally runs automatically on sweep day.
+          <p
+            style={{
+              margin: '0 0 1.25rem',
+              fontSize: '0.875rem',
+              color: 'var(--text-muted)'
+            }}
+          >
+            Move this month&apos;s accumulated invisible savings into your
+            Savings account. Normally runs automatically on sweep day.
           </p>
 
           {sweepError && (
@@ -751,18 +1028,33 @@ export default function InvisibleSavingsPage() {
           {sweepReceipt && (
             <div
               style={{
-                background: sweepReceipt.status === 'completed' ? '#f0fdf4' : '#fffbeb',
+                background:
+                  sweepReceipt.status === 'completed' ? '#f0fdf4' : '#fffbeb',
                 border: `1px solid ${sweepReceipt.status === 'completed' ? '#bbf7d0' : '#fde68a'}`,
                 borderRadius: 12,
                 padding: '1rem 1.25rem',
                 marginBottom: '1rem'
               }}
             >
-              <p style={{ margin: 0, fontWeight: 700, color: sweepReceipt.status === 'completed' ? '#15803d' : '#92400e', fontSize: '0.9rem' }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontWeight: 700,
+                  color:
+                    sweepReceipt.status === 'completed' ? '#15803d' : '#92400e',
+                  fontSize: '0.9rem'
+                }}
+              >
                 {sweepReceipt.message}
               </p>
               {sweepReceipt.status === 'completed' && (
-                <p style={{ margin: '0.4rem 0 0', fontSize: '0.85rem', color: '#16a34a' }}>
+                <p
+                  style={{
+                    margin: '0.4rem 0 0',
+                    fontSize: '0.85rem',
+                    color: '#16a34a'
+                  }}
+                >
                   {sweepReceipt.amountDisplay} moved to Savings account.
                 </p>
               )}
@@ -798,11 +1090,31 @@ export default function InvisibleSavingsPage() {
             marginBottom: '2rem'
           }}
         >
-          <h2 style={{ margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2
+            style={{
+              margin: '0 0 1.25rem',
+              fontSize: '1rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)'
+            }}
+          >
             Settings
           </h2>
-          <form onSubmit={handleSettingsSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' }}>
+          <form
+            onSubmit={handleSettingsSave}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          >
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                cursor: 'pointer'
+              }}
+            >
               <input
                 type="checkbox"
                 checked={settingsEnabled}
@@ -812,9 +1124,23 @@ export default function InvisibleSavingsPage() {
               Enable Invisible Savings
             </label>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem'
+              }}
+            >
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: 'var(--text-muted)',
+                    display: 'block',
+                    marginBottom: 6
+                  }}
+                >
                   Debit from (Expenses)
                 </label>
                 <select
@@ -838,7 +1164,15 @@ export default function InvisibleSavingsPage() {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>
+                <label
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: 'var(--text-muted)',
+                    display: 'block',
+                    marginBottom: 6
+                  }}
+                >
                   Sweep to (Savings)
                 </label>
                 <select
@@ -863,7 +1197,14 @@ export default function InvisibleSavingsPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'center',
+                flexWrap: 'wrap'
+              }}
+            >
               <button
                 type="submit"
                 disabled={settingsSaving}
@@ -884,7 +1225,8 @@ export default function InvisibleSavingsPage() {
                 <span
                   style={{
                     fontSize: '0.85rem',
-                    color: settingsMsg === 'Settings saved.' ? '#15803d' : '#dc2626'
+                    color:
+                      settingsMsg === 'Settings saved.' ? '#15803d' : '#dc2626'
                   }}
                 >
                   {settingsMsg}
@@ -903,7 +1245,14 @@ export default function InvisibleSavingsPage() {
             padding: '1.5rem'
           }}
         >
-          <h2 style={{ margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <h2
+            style={{
+              margin: '0 0 1.25rem',
+              fontSize: '1rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)'
+            }}
+          >
             Recent savings events
           </h2>
           {!summary?.events?.length ? (
@@ -911,9 +1260,17 @@ export default function InvisibleSavingsPage() {
               No savings events yet. Simulate a purchase above to get started.
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
+              }}
+            >
               {summary.events.map((ev) => {
-                const partner = partners.find((p) => p.id === ev.partnerMerchantId)
+                const partner = partners.find(
+                  (p) => p.id === ev.partnerMerchantId
+                )
                 return (
                   <div
                     key={ev.id}
@@ -928,20 +1285,49 @@ export default function InvisibleSavingsPage() {
                   >
                     {partner && <PartnerBadge merchant={partner} />}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                          fontSize: '0.875rem'
+                        }}
+                      >
                         {ev.partnerName}
                       </p>
-                      <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      <p
+                        style={{
+                          margin: '0.15rem 0 0',
+                          fontSize: '0.78rem',
+                          color: 'var(--text-muted)'
+                        }}
+                      >
                         {new Date(ev.createdAt).toLocaleDateString('en-GB', {
-                          day: 'numeric', month: 'short', year: 'numeric'
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
                         })}
                       </p>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <p style={{ margin: 0, fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontWeight: 700,
+                          color: 'var(--text-primary)',
+                          fontSize: '0.875rem'
+                        }}
+                      >
                         {ev.purchaseAmountDisplay}
                       </p>
-                      <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: '#16a34a', fontWeight: 600 }}>
+                      <p
+                        style={{
+                          margin: '0.15rem 0 0',
+                          fontSize: '0.78rem',
+                          color: '#16a34a',
+                          fontWeight: 600
+                        }}
+                      >
                         +{ev.roundupAmountDisplay} saved
                       </p>
                     </div>
@@ -949,8 +1335,10 @@ export default function InvisibleSavingsPage() {
                       style={{
                         padding: '0.2rem 0.6rem',
                         borderRadius: 6,
-                        background: ev.status === 'accumulated' ? '#dcfce7' : '#dbeafe',
-                        color: ev.status === 'accumulated' ? '#15803d' : '#1d4ed8',
+                        background:
+                          ev.status === 'accumulated' ? '#dcfce7' : '#dbeafe',
+                        color:
+                          ev.status === 'accumulated' ? '#15803d' : '#1d4ed8',
                         fontSize: '0.72rem',
                         fontWeight: 700
                       }}

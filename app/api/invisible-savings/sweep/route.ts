@@ -16,8 +16,11 @@ import { ForbiddenError, UnauthorizedError } from '@/lib/auth-errors'
 import { ensureDatabase } from '@/lib/platform-db'
 import { getCurrentUser } from '@/lib/session'
 import { BankingError } from '@/server/errors/banking-errors'
+import {
+  parseBody,
+  sweepSavingsSchema
+} from '@/server/schemas/invisible-savings-schemas'
 import { sweepInvisibleSavingsForMonth } from '@/server/services/invisible-savings-service'
-import { parseBody, sweepSavingsSchema } from '@/server/schemas/invisible-savings-schemas'
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +31,8 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}))
     const parsed = parseBody(sweepSavingsSchema, body)
-    if (parsed.data === null) return badRequest(parsed.error ?? 'Invalid request.')
+    if (parsed.data === null)
+      return badRequest(parsed.error ?? 'Invalid request.')
 
     const { monthKey } = parsed.data
 
@@ -42,8 +46,12 @@ export async function POST(request: Request) {
     if (err instanceof UnauthorizedError) return unauthorized()
     if (err instanceof ForbiddenError) return forbidden()
     if (err instanceof BankingError) {
-      const status = err.statusCode === 404 ? 404 : err.statusCode === 403 ? 403 : 400
-      return NextResponse.json({ error: err.message, code: err.code }, { status })
+      const status =
+        err.statusCode === 404 ? 404 : err.statusCode === 403 ? 403 : 400
+      return NextResponse.json(
+        { error: err.message, code: err.code },
+        { status }
+      )
     }
     console.error('[api/invisible-savings/sweep POST]', (err as Error).message)
     return serverError()

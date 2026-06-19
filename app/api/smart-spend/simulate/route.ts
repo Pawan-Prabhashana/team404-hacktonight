@@ -13,12 +13,16 @@ export async function POST(req: NextRequest) {
     const parsed = financialTwinSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid simulation input.', details: parsed.error.flatten().fieldErrors },
-        { status: 422 },
+        {
+          error: 'Invalid simulation input.',
+          details: parsed.error.flatten().fieldErrors
+        },
+        { status: 422 }
       )
     }
 
-    const { scenarioType, amount, categorySlug, accountId, description } = parsed.data
+    const { scenarioType, amount, categorySlug, accountId, description } =
+      parsed.data
     const amountMinorUnits = toMinorUnits(amount)
 
     const result = await simulateFinancialScenario({
@@ -27,7 +31,7 @@ export async function POST(req: NextRequest) {
       amountMinorUnits,
       categorySlug,
       accountId: accountId ? Number(accountId) : undefined,
-      description,
+      description
     })
 
     return NextResponse.json({ result })

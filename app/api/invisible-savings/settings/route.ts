@@ -13,9 +13,10 @@ import {
   serverError,
   unauthorized
 } from '@/lib/api-response'
-import { ForbiddenError, UnauthorizedError } from '@/lib/auth-errors'
-import { toMinorUnits } from '@/lib/money'
 import { writeAuditLog } from '@/lib/audit'
+import { ForbiddenError, UnauthorizedError } from '@/lib/auth-errors'
+import { query } from '@/lib/db'
+import { toMinorUnits } from '@/lib/money'
 import { getCurrentUser } from '@/lib/session'
 import { BankingError } from '@/server/errors/banking-errors'
 import {
@@ -26,7 +27,6 @@ import {
   parseBody,
   updateInvisibleSavingsSettingsSchema
 } from '@/server/schemas/invisible-savings-schemas'
-import { query } from '@/lib/db'
 
 export async function GET() {
   try {
@@ -38,7 +38,10 @@ export async function GET() {
   } catch (err) {
     if (err instanceof UnauthorizedError) return unauthorized()
     if (err instanceof ForbiddenError) return forbidden()
-    console.error('[api/invisible-savings/settings GET]', (err as Error).message)
+    console.error(
+      '[api/invisible-savings/settings GET]',
+      (err as Error).message
+    )
     return serverError()
   }
 }
@@ -50,7 +53,8 @@ export async function PATCH(request: Request) {
 
     const body = await request.json().catch(() => ({}))
     const parsed = parseBody(updateInvisibleSavingsSettingsSchema, body)
-    if (parsed.data === null) return badRequest(parsed.error ?? 'Invalid request.')
+    if (parsed.data === null)
+      return badRequest(parsed.error ?? 'Invalid request.')
 
     const {
       enabled,
@@ -122,7 +126,11 @@ export async function PATCH(request: Request) {
       action: 'INVISIBLE_SAVINGS_SETTINGS_UPDATED',
       entityType: 'invisible_savings_settings',
       entityId: String(settings.id),
-      metadata: { enabled: settings.enabled, sourceAccountId: newSourceId, destinationAccountId: newDestId }
+      metadata: {
+        enabled: settings.enabled,
+        sourceAccountId: newSourceId,
+        destinationAccountId: newDestId
+      }
     })
 
     return NextResponse.json({ settings })
@@ -135,7 +143,10 @@ export async function PATCH(request: Request) {
         { status: err.statusCode }
       )
     }
-    console.error('[api/invisible-savings/settings PATCH]', (err as Error).message)
+    console.error(
+      '[api/invisible-savings/settings PATCH]',
+      (err as Error).message
+    )
     return serverError()
   }
 }

@@ -3,8 +3,9 @@
  *
  * All queries are scoped by user_id. Uses parameterized SQL only.
  */
-import { formatCurrency } from '@/lib/money'
+
 import { query } from '@/lib/db'
+import { formatCurrency } from '@/lib/money'
 import { ensureDatabase } from '@/lib/platform-db'
 
 // ---------------------------------------------------------------------------
