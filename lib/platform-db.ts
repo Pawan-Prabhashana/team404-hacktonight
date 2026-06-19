@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS beneficiaries (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  bank_name TEXT NOT NULL DEFAULT 'NOVA Bank',
+  bank_name TEXT NOT NULL DEFAULT 'Serandib Bank',
   account_number TEXT NOT NULL,
   trust_level TEXT NOT NULL DEFAULT 'new',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
