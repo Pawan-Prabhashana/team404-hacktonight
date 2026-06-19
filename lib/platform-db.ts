@@ -35,19 +35,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE INDEX IF NOT EXISTS idx_users_email_legacy ON users (email);
 
--- Ensure password_hash column exists even if old schema used 'password'
+-- Ensure password_hash column exists (safe no-op if already present).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
--- Copy values from legacy 'password' column if present
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'users' AND column_name = 'password'
-  ) THEN
-    UPDATE users SET password_hash = password WHERE password_hash IS NULL;
-  END IF;
-END
-$$;
 
 CREATE TABLE IF NOT EXISTS accounts (
   id SERIAL PRIMARY KEY,
