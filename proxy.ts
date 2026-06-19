@@ -52,14 +52,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Authenticated user visiting an auth page → redirect to dashboard
-  if (AUTH_EXACT_PATHS.has(pathname) && isAuthenticated) {
-    const dashUrl = request.nextUrl.clone()
-    dashUrl.pathname = '/dashboard'
-    dashUrl.searchParams.delete('next')
-    return NextResponse.redirect(dashUrl)
-  }
-
   return NextResponse.next()
 }
 
