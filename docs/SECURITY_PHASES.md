@@ -224,3 +224,31 @@ Kept here to avoid scattering `TODO` comments across every file.
 - Rate limiting on transfer endpoints not yet implemented (login has basic in-memory limiter)
 - All error responses are generic to the client; ensure no new leakage in future phases
 - Dependency audit: run npm audit and fix high/critical CVEs before production
+
+---
+
+## Phase 8: Smart Spend Analytics Engine — Complete
+
+- Rule-based transaction categorization (dining, groceries, utilities, etc.)
+- Per-user monthly budgets with over-budget alerts
+- Financial Twin simulator (what-if scenarios — no real transactions)
+- Smart Spend summary API with cashflow forecast and recurring payment detection
+- Protected APIs: /api/smart-spend/summary, /api/smart-spend/categories, /api/smart-spend/budgets, /api/smart-spend/simulate
+- All data scoped by session user_id
+
+---
+
+## Phase 9: Invisible Savings Engine — Complete
+
+- Partner merchant registry (Barista, Java Lounge, KFC, Pizza Hut, Dominos, Crepe Runner, Caravan Fresh)
+- Automatic LKR 20–50 round-up per partner card transaction
+- Total debit = purchase + round-up (source account debited once atomically)
+- Savings accumulate monthly; credited to savings account only during month-end sweep
+- Idempotency protection (duplicate purchase key returns same receipt)
+- Monthly sweep cannot run twice for the same month
+- Protected APIs: /api/partner-merchants, /api/invisible-savings/settings, /api/invisible-savings/summary, /api/invisible-savings/purchase, /api/invisible-savings/sweep
+- Dashboard integration showing monthly savings, event count, next sweep date
+- Smart Spend Invisible Savings effect section
+- E-Statement shows card_purchase and invisible_savings_sweep transaction types
+- All ownership checks inside FOR UPDATE DB row locks
+- Audit logs written for INVISIBLE_SAVINGS_CAPTURED and INVISIBLE_SAVINGS_SWEPT events
