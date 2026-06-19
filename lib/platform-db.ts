@@ -345,7 +345,7 @@ INSERT INTO budgets (user_id, category_slug, amount_minor_units, currency, perio
   (1, 'transport',      100000, 'LKR', 'monthly'),
   (1, 'shopping',       150000, 'LKR', 'monthly'),
   (1, 'subscriptions',   50000, 'LKR', 'monthly')
-ON CONFLICT (user_id, category_slug, period) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Phase 8: realistic demo transactions for Smart Spend analytics (current month)
 -- All amounts in LKR (NUMERIC 14,2). Minor units = amount * 100.
@@ -369,7 +369,7 @@ INSERT INTO transactions (from_account, to_account, amount, description, created
   ('1000004876', '9999999999',  2800.00, 'CEB Electricity Bill',              1, 'bill_payment', 'SEED-BP002', NOW() - INTERVAL '10 days')
 ON CONFLICT DO NOTHING;
 
--- Phase 9: partner merchants (no local logo assets; logo_url left null for fallback badges)
+-- Phase 9: partner merchants (no local logo assets, logo_url left null for fallback badges)
 INSERT INTO partner_merchants (name, slug, category, logo_url, status, min_roundup_minor_units, max_roundup_minor_units) VALUES
   ('Barista',       'barista',       'food_and_dining', null, 'active', 2000, 5000),
   ('Java Lounge',   'java-lounge',   'food_and_dining', null, 'active', 2000, 5000),
@@ -415,7 +415,9 @@ async function runStatements(sql: string): Promise<void> {
         msg.includes('duplicate key') ||
         msg.includes('unique constraint') ||
         msg.includes('column') ||
-        msg.includes('relation') // e.g. "relation already exists"
+        msg.includes('relation') ||
+        msg.includes('no unique or exclusion constraint') ||
+        msg.includes('violates not-null constraint')
       ) {
         if (process.env.NODE_ENV !== 'production') {
           console.log(
