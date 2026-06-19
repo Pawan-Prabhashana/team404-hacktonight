@@ -71,10 +71,30 @@ npx tsx scripts/hash-demo-passwords.ts
 - Insufficient funds are rejected atomically (compared inside the locked row).
 - Every transfer creates one debit + one credit ledger entry.
 
-### Phase 7 will add
+### Phase 7 status (complete)
 
-- Bill payment execution engine.
-- SmartSpend analytics categorization.
+- The running app schema (`lib/platform-db.ts`) added two tables via
+  `ensureDatabase()`:
+  - `billers` — `id`, `name`, `category`, `provider_code` (unique), `logo_url`,
+    `status`, timestamps. Categories: `utilities`, `mobile`, `internet`,
+    `insurance`, `education`, `government`, `credit_card`, `other`.
+  - `bill_payments` — `reference` (unique), `user_id`, `account_id`, `biller_id`,
+    `transaction_id`, `bill_reference`, `amount_minor_units`, `currency`,
+    `status` (`pending`/`completed`/`failed`/`cancelled`), `idempotency_key`,
+    `scheduled_for`, `paid_at`, timestamps.
+- Bill payments are atomic and ledger-backed: each completed payment creates one
+  `transactions` row (`type = 'bill_payment'`), one debit `ledger_entries` row,
+  one `bill_payments` row, and an audit log — all inside a single DB transaction
+  with a `FOR UPDATE` lock on the source account.
+- Idempotency is enforced via a unique index on
+  `(user_id, idempotency_key)` where the key is not null.
+- Frozen accounts cannot pay bills; insufficient funds are rejected atomically.
+- Demo billers seeded: CEB Electricity, National Water Board, Dialog Mobile,
+  SLT Fiber, Mobitel, AIA Insurance, University Payments, Municipal Council.
+
+### Future phases will add
+
+- SmartSpend analytics categorization (Phase 8).
 - Full SafePay Guardian risk rule engine.
 - Statement PDF/CSV export.
 
