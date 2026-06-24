@@ -45,6 +45,12 @@ const billers: Biller[] = [
     category: 'Entertainment'
   },
   {
+    id: 'cable',
+    name: 'Cable TV',
+    logo: '/billers/cable-tv.png',
+    category: 'Entertainment'
+  },
+  {
     id: 'aia',
     name: 'AIA Insurance',
     logo: '/billers/aia.png',
@@ -57,12 +63,6 @@ const billers: Biller[] = [
     category: 'Finance'
   },
   { id: 'hsbc', name: 'HSBC', logo: '/billers/hsbc.png', category: 'Bank' },
-  {
-    id: 'cable',
-    name: 'Cable TV',
-    logo: '/billers/cable-tv.png',
-    category: 'Entertainment'
-  },
   {
     id: 'insurance',
     name: 'Insurance',
@@ -122,78 +122,101 @@ export default function PayBillsPage() {
   }
 
   return (
-    <AppShell>
-      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-8">
-        <div className="mb-6">
-          <h1
-            className="text-2xl font-extrabold"
-            style={{ color: 'var(--serandib-navy)' }}
-          >
-            Pay Bills
-          </h1>
-          <p
-            className="mt-1 text-sm"
-            style={{ color: 'var(--serandib-muted)' }}
-          >
-            Utilities, telecom, insurance, and more
-          </p>
-        </div>
-
-        {/* Bill Radar preview */}
+    <AppShell
+      title="Pay Bills"
+      subtitle="Utilities, telecom, insurance, and more"
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        {/* Bill Radar info card */}
         <div
-          className="mb-6 flex items-start gap-3 rounded-2xl p-4"
-          style={{
-            background: 'rgba(10,99,255,0.06)',
-            border: '1px solid var(--serandib-border)'
-          }}
+          className="app-card-soft"
+          style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}
         >
-          <span className="text-2xl">⚡</span>
-          <div>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: '0.875rem',
+              background: 'rgba(8,127,122,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#087f7a',
+              flexShrink: 0,
+              fontSize: '1.25rem'
+            }}
+          >
+            ⚡
+          </div>
+          <div style={{ flex: 1 }}>
             <p
-              className="font-semibold text-sm"
-              style={{ color: 'var(--serandib-navy)' }}
+              style={{
+                fontWeight: 700,
+                color: '#071f2a',
+                fontSize: '0.9375rem'
+              }}
             >
               Bill Radar
             </p>
             <p
-              className="text-xs mt-0.5"
-              style={{ color: 'var(--serandib-muted)' }}
+              style={{
+                color: '#6b7a90',
+                fontSize: '0.875rem',
+                marginTop: '0.25rem',
+                lineHeight: 1.6
+              }}
             >
-              We will detect recurring bills and forecast your balance after
-              payments — coming in the next intelligence update.
+              We will automatically detect recurring bills and forecast your
+              account balance after payments — coming in the next intelligence
+              update.
             </p>
           </div>
-          <span className="serandib-pill serandib-pill-blue ml-auto shrink-0 text-xs">
-            Soon
+          <span className="app-pill app-pill-teal" style={{ flexShrink: 0 }}>
+            Coming soon
           </span>
         </div>
 
+        {/* Biller select */}
         {screen === 'select' && (
-          <div className="serandib-card p-6">
-            {/* Categories */}
-            <div className="mb-4 flex flex-wrap gap-2">
+          <div className="app-card">
+            {/* Category pills */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+                marginBottom: '1.5rem'
+              }}
+            >
               {categories.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setActiveCategory(c)}
-                  className="rounded-full px-4 py-1.5 text-xs font-semibold transition-all"
-                  style={
+                  className={
                     activeCategory === c
-                      ? { background: 'var(--serandib-blue)', color: 'white' }
-                      : {
-                          background: 'rgba(10,99,255,0.06)',
-                          color: 'var(--serandib-blue)',
-                          border: '1px solid var(--serandib-border)'
-                        }
+                      ? 'app-button-primary'
+                      : 'app-button-ghost'
                   }
+                  style={{
+                    height: 36,
+                    padding: '0 1rem',
+                    fontSize: '0.8125rem'
+                  }}
                 >
                   {c}
                 </button>
               ))}
             </div>
 
-            <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+            {/* Biller grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                gap: '1rem'
+              }}
+            >
               {filtered.map((b) => (
                 <button
                   key={b.id}
@@ -202,15 +225,40 @@ export default function PayBillsPage() {
                     setSelected(b)
                     setScreen('form')
                   }}
-                  className="flex flex-col items-center gap-2 rounded-2xl p-3 transition-all hover:-translate-y-1 hover:shadow-md"
                   style={{
-                    border: '1px solid var(--serandib-border)',
-                    background: 'white'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '0.625rem',
+                    padding: '1.25rem 0.75rem',
+                    borderRadius: '1rem',
+                    border: '1.5px solid #e7edf1',
+                    background: '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                  onMouseEnter={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.borderColor =
+                      '#0d9488'
+                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      '0 4px 14px rgba(8,127,122,0.1)'
+                  }}
+                  onMouseLeave={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.borderColor =
+                      '#e7edf1'
+                    ;(e.currentTarget as HTMLButtonElement).style.boxShadow =
+                      'none'
                   }}
                 >
                   <div
-                    className="relative h-12 w-12 overflow-hidden rounded-full border"
-                    style={{ borderColor: 'var(--serandib-border)' }}
+                    style={{
+                      position: 'relative',
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      border: '1px solid #f1f5f8'
+                    }}
                   >
                     <Image
                       src={b.logo}
@@ -220,8 +268,13 @@ export default function PayBillsPage() {
                     />
                   </div>
                   <span
-                    className="text-center text-xs font-medium leading-tight"
-                    style={{ color: 'var(--serandib-navy)' }}
+                    style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: '#071f2a',
+                      textAlign: 'center',
+                      lineHeight: 1.3
+                    }}
                   >
                     {b.name}
                   </span>
@@ -231,211 +284,315 @@ export default function PayBillsPage() {
           </div>
         )}
 
+        {/* Payment form */}
         {screen === 'form' && selected && (
-          <div className="serandib-card max-w-lg p-6">
-            <button
-              type="button"
-              onClick={() => setScreen('select')}
-              className="mb-4 flex items-center gap-1 text-sm font-medium hover:underline"
-              style={{ color: 'var(--serandib-blue)' }}
-            >
-              ← Back to billers
-            </button>
-
-            <div className="mb-5 flex items-center gap-3">
-              <div
-                className="relative h-10 w-10 overflow-hidden rounded-xl border"
-                style={{ borderColor: 'var(--serandib-border)' }}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0,1.2fr) minmax(280px,0.8fr)',
+              gap: '1.5rem',
+              alignItems: 'start'
+            }}
+          >
+            <div className="app-card">
+              <button
+                type="button"
+                onClick={() => setScreen('select')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.375rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#087f7a',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  marginBottom: '1.5rem',
+                  padding: 0
+                }}
               >
-                <Image
-                  src={selected.logo}
-                  alt={selected.name}
-                  fill
-                  style={{ objectFit: 'contain' }}
-                />
-              </div>
-              <div>
-                <p
-                  className="font-bold"
-                  style={{ color: 'var(--serandib-navy)' }}
-                >
-                  {selected.name}
-                </p>
-                <p
-                  className="text-xs"
-                  style={{ color: 'var(--serandib-muted)' }}
-                >
-                  {selected.category}
-                </p>
-              </div>
-            </div>
+                ← Back to billers
+              </button>
 
-            <div className="space-y-4">
-              {[
-                {
-                  id: 'acc',
-                  label: 'Account number',
-                  val: accountNumber,
-                  set: setAccountNumber,
-                  placeholder: 'Enter account number',
-                  key: 'accountNumber'
-                },
-                {
-                  id: 'bid',
-                  label: 'Bill ID',
-                  val: billId,
-                  set: setBillId,
-                  placeholder: 'Enter bill ID',
-                  key: 'billId'
-                }
-              ].map((f) => (
-                <div key={f.id}>
-                  <label
-                    className="mb-1.5 block text-sm font-medium"
-                    style={{ color: 'var(--serandib-muted)' }}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  marginBottom: '1.75rem',
+                  paddingBottom: '1.25rem',
+                  borderBottom: '1px solid #f1f5f8'
+                }}
+              >
+                <div
+                  style={{
+                    position: 'relative',
+                    width: 44,
+                    height: 44,
+                    borderRadius: '0.75rem',
+                    overflow: 'hidden',
+                    border: '1px solid #e7edf1',
+                    flexShrink: 0
+                  }}
+                >
+                  <Image
+                    src={selected.logo}
+                    alt={selected.name}
+                    fill
+                    style={{ objectFit: 'contain' }}
+                  />
+                </div>
+                <div>
+                  <p style={{ fontWeight: 700, color: '#071f2a' }}>
+                    {selected.name}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: '0.8125rem',
+                      color: '#6b7a90',
+                      marginTop: '0.125rem'
+                    }}
                   >
-                    {f.label}
-                  </label>
+                    {selected.category}
+                  </p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1.25rem'
+                }}
+              >
+                {[
+                  {
+                    id: 'acc',
+                    label: 'Account number',
+                    val: accountNumber,
+                    set: setAccountNumber,
+                    placeholder: 'Enter account number',
+                    key: 'accountNumber'
+                  },
+                  {
+                    id: 'bid',
+                    label: 'Bill ID',
+                    val: billId,
+                    set: setBillId,
+                    placeholder: 'Enter bill reference',
+                    key: 'billId'
+                  }
+                ].map((f) => (
+                  <div key={f.id}>
+                    <label className="app-label">{f.label}</label>
+                    <input
+                      type="text"
+                      value={f.val}
+                      onChange={(e) => {
+                        f.set(e.target.value)
+                        setErrors((p) => {
+                          const n = { ...p }
+                          delete n[f.key]
+                          return n
+                        })
+                      }}
+                      placeholder={f.placeholder}
+                      className={`app-input${errors[f.key] ? ' app-input-error' : ''}`}
+                    />
+                    {errors[f.key] && (
+                      <p className="app-error-msg">{errors[f.key]}</p>
+                    )}
+                  </div>
+                ))}
+
+                <div>
+                  <label className="app-label">Amount (LKR)</label>
                   <input
-                    type="text"
-                    value={f.val}
+                    type="number"
+                    value={amount}
                     onChange={(e) => {
-                      f.set(e.target.value)
+                      setAmount(e.target.value)
                       setErrors((p) => {
                         const n = { ...p }
-                        delete n[f.key]
+                        delete n.amount
                         return n
                       })
                     }}
-                    placeholder={f.placeholder}
-                    className="serandib-input"
+                    placeholder="0.00"
+                    min="0.01"
+                    step="0.01"
+                    className={`app-input${errors.amount ? ' app-input-error' : ''}`}
+                    style={{ fontSize: '1.25rem', fontWeight: 700 }}
                   />
-                  {errors[f.key] && (
-                    <p
-                      className="mt-1 text-xs"
-                      style={{ color: 'var(--serandib-danger)' }}
-                    >
-                      {errors[f.key]}
-                    </p>
+                  {errors.amount && (
+                    <p className="app-error-msg">{errors.amount}</p>
                   )}
                 </div>
-              ))}
 
-              <div>
-                <label
-                  className="mb-1.5 block text-sm font-medium"
-                  style={{ color: 'var(--serandib-muted)' }}
-                >
-                  Due amount (LKR)
-                </label>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => {
-                    setAmount(e.target.value)
-                    setErrors((p) => {
-                      const n = { ...p }
-                      delete n.amount
-                      return n
-                    })
+                <div>
+                  <label className="app-label">
+                    Remarks{' '}
+                    <span style={{ fontWeight: 400, color: '#9ca3af' }}>
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder="Optional note"
+                    className="app-input"
+                  />
+                </div>
+
+                <div
+                  style={{
+                    padding: '0.875rem 1.125rem',
+                    borderRadius: '0.875rem',
+                    background: 'rgba(245,158,11,0.06)',
+                    border: '1px solid rgba(245,158,11,0.2)',
+                    fontSize: '0.8125rem',
+                    color: '#92400e',
+                    lineHeight: 1.6
                   }}
-                  placeholder="0.00"
-                  min="0.01"
-                  step="0.01"
-                  className="serandib-input"
-                />
-                {errors.amount && (
-                  <p
-                    className="mt-1 text-xs"
-                    style={{ color: 'var(--serandib-danger)' }}
-                  >
-                    {errors.amount}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  className="mb-1.5 block text-sm font-medium"
-                  style={{ color: 'var(--serandib-muted)' }}
                 >
-                  Remarks (optional)
-                </label>
-                <input
-                  type="text"
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Optional"
-                  className="serandib-input"
-                />
-              </div>
+                  Bill payment is in demo mode. No funds are deducted from your
+                  account.
+                </div>
 
-              <div
-                className="rounded-xl p-3 text-xs"
+                <button
+                  type="button"
+                  onClick={handlePay}
+                  className="app-button-primary"
+                  style={{ width: '100%', fontSize: '1rem', fontWeight: 700 }}
+                >
+                  Pay Now
+                </button>
+              </div>
+            </div>
+
+            {/* Info sidebar */}
+            <div className="app-card-soft">
+              <p
                 style={{
-                  background: 'rgba(245,158,11,0.07)',
-                  color: '#92400e',
-                  border: '1px solid rgba(245,158,11,0.2)'
+                  fontWeight: 700,
+                  color: '#071f2a',
+                  marginBottom: '1rem',
+                  fontSize: '0.9375rem'
                 }}
               >
-                ⚠ Bill payment execution is in demo mode. Actual deductions
-                require the Phase 6 ledger engine.
-              </div>
-
-              <button
-                type="button"
-                onClick={handlePay}
-                className="serandib-button-primary w-full py-3.5"
+                Payment Info
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.875rem',
+                  fontSize: '0.875rem',
+                  color: '#374151'
+                }}
               >
-                Pay Now
-              </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <span
+                    style={{ color: '#087f7a', flexShrink: 0, fontWeight: 700 }}
+                  >
+                    ✓
+                  </span>
+                  Instant payment confirmation
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <span
+                    style={{ color: '#087f7a', flexShrink: 0, fontWeight: 700 }}
+                  >
+                    ✓
+                  </span>
+                  Secure channel — no card data stored
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <span
+                    style={{ color: '#087f7a', flexShrink: 0, fontWeight: 700 }}
+                  >
+                    ✓
+                  </span>
+                  Receipt emailed automatically
+                </div>
+              </div>
             </div>
           </div>
         )}
 
+        {/* Success */}
         {screen === 'success' && (
-          <div className="serandib-card max-w-sm mx-auto p-8 text-center">
+          <div style={{ maxWidth: 440, margin: '0 auto', width: '100%' }}>
             <div
-              className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full text-3xl"
-              style={{ background: 'rgba(16,185,129,0.1)' }}
+              className="app-card"
+              style={{
+                textAlign: 'center',
+                padding: '2.5rem',
+                border: '1.5px solid rgba(16,185,129,0.2)'
+              }}
             >
-              ✅
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  background: 'rgba(16,185,129,0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.25rem',
+                  color: '#059669',
+                  fontSize: '1.5rem',
+                  fontWeight: 800
+                }}
+              >
+                ✓
+              </div>
+              <h2
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: '#071f2a'
+                }}
+              >
+                Payment Submitted
+              </h2>
+              <p
+                style={{
+                  color: '#6b7a90',
+                  fontSize: '0.875rem',
+                  marginTop: '0.5rem',
+                  marginBottom: '1.5rem'
+                }}
+              >
+                Your {selected?.name} bill payment has been submitted.
+                <br />
+                Confirmation:{' '}
+                <strong style={{ fontFamily: 'monospace', color: '#071f2a' }}>
+                  {confirmation}
+                </strong>
+              </p>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.75rem',
+                  justifyContent: 'center'
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="app-button-primary"
+                >
+                  Pay Another Bill
+                </button>
+              </div>
             </div>
-            <h2
-              className="mb-2 text-xl font-bold"
-              style={{ color: 'var(--serandib-navy)' }}
-            >
-              Payment Submitted
-            </h2>
-            <p
-              className="text-sm mb-1"
-              style={{ color: 'var(--serandib-muted)' }}
-            >
-              Confirmation number:
-            </p>
-            <p
-              className="mb-4 font-mono font-bold text-lg"
-              style={{ color: 'var(--serandib-blue)' }}
-            >
-              #{confirmation}
-            </p>
-            <p
-              className="text-xs mb-5"
-              style={{ color: 'var(--serandib-muted)' }}
-            >
-              This is a demo confirmation. Actual balance deduction will occur
-              after the Phase 6 ledger upgrade.
-            </p>
-            <button
-              type="button"
-              onClick={reset}
-              className="serandib-button-primary px-8 py-2.5"
-            >
-              Pay Another Bill
-            </button>
           </div>
         )}
-      </main>
+      </div>
     </AppShell>
   )
 }
