@@ -245,6 +245,124 @@ export async function fetchTransferReceipt(
 }
 
 // ---------------------------------------------------------------------------
+// Bill payment types and helpers — Phase 7
+// ---------------------------------------------------------------------------
+
+export type SafeBiller = {
+  id: number
+  name: string
+  category: string
+  providerCode: string
+  logoUrl: string | null
+  status: string
+}
+
+export type SafeBillPayment = {
+  id: number
+  reference: string
+  accountId: number
+  billerId: number
+  transactionId: number | null
+  billerName: string
+  billerCategory: string | null
+  billReference: string
+  amountMinorUnits: number
+  amountDisplay: string
+  currency: string
+  status: string
+  paidAt: string | null
+  createdAt: string
+}
+
+export type BillPaymentReceipt = {
+  reference: string
+  billPaymentId: number
+  transactionId: number
+  accountId: number
+  billerId: number
+  billerName: string
+  billReference: string
+  amountMinorUnits: number
+  amountDisplay: string
+  currency: string
+  status: 'completed'
+  paidAt: string
+  balanceAfterMinorUnits: number
+  balanceAfterDisplay: string
+}
+
+export async function fetchBillers(params?: {
+  category?: string
+  search?: string
+}): Promise<SafeBiller[]> {
+  const qs = new URLSearchParams()
+  if (params?.category) qs.set('category', params.category)
+  if (params?.search) qs.set('search', params.search)
+  const suffix = qs.toString() ? `?${qs.toString()}` : ''
+  const data = await apiFetch<{ billers: SafeBiller[] }>(
+    `/api/billers${suffix}`
+  )
+  return data.billers
+}
+
+export async function fetchBillPayments(params?: {
+  accountId?: number
+  billerId?: number
+  status?: string
+  limit?: number
+  offset?: number
+}): Promise<{
+  billPayments: SafeBillPayment[]
+  pagination: { limit: number; offset: number; count: number }
+}> {
+  const qs = new URLSearchParams()
+  if (params?.accountId !== undefined)
+    qs.set('accountId', String(params.accountId))
+  if (params?.billerId !== undefined)
+    qs.set('billerId', String(params.billerId))
+  if (params?.status) qs.set('status', params.status)
+  if (params?.limit !== undefined) qs.set('limit', String(params.limit))
+  if (params?.offset !== undefined) qs.set('offset', String(params.offset))
+  const suffix = qs.toString() ? `?${qs.toString()}` : ''
+  return apiFetch(`/api/bill-payments${suffix}`)
+}
+
+export async function createBillPayment(input: {
+  accountId: number
+  billerId: number
+  billReference: string
+  amount: string | number
+  currency?: string
+}): Promise<BillPaymentReceipt> {
+  // Generate an idempotency key so a retried/double-clicked submit cannot
+  // produce a second payment. userId is never sent — it comes from the cookie.
+  const idempotencyKey = generateIdempotencyKey()
+
+  const data = await apiFetch<{ receipt: BillPaymentReceipt }>(
+    '/api/bill-payments',
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
+      body: JSON.stringify({ ...input, idempotencyKey })
+    }
+  )
+  return data.receipt
+}
+
+export async function fetchBillPaymentReceipt(
+  reference: string
+): Promise<BillPaymentReceipt | null> {
+  try {
+    const data = await apiFetch<{ receipt: BillPaymentReceipt }>(
+      `/api/bill-payments/${reference}`
+    )
+    return data.receipt
+  } catch {
+    return null
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Notification helpers
 // ---------------------------------------------------------------------------
 

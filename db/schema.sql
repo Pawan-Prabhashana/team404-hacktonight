@@ -135,35 +135,54 @@ CREATE INDEX IF NOT EXISTS idx_ledger_entries_transaction_id ON ledger_entries (
 -- =============================================================================
 -- BILLERS
 -- =============================================================================
+-- Phase 7: provider_code identifies the biller; status replaces is_active.
 CREATE TABLE IF NOT EXISTS billers (
-  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  name        TEXT        NOT NULL,
-  code        TEXT        NOT NULL,
-  category    TEXT        NOT NULL DEFAULT 'utility',
-  logo_path   TEXT,
-  is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT billers_code_unique UNIQUE (code)
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT        NOT NULL,
+  category      TEXT        NOT NULL DEFAULT 'other'
+                CHECK (category IN ('utilities', 'mobile', 'internet', 'insurance',
+                                    'education', 'government', 'credit_card', 'other')),
+  provider_code TEXT        NOT NULL,
+  logo_url      TEXT,
+  status        TEXT        NOT NULL DEFAULT 'active'
+                CHECK (status IN ('active', 'inactive')),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT billers_provider_code_unique UNIQUE (provider_code)
 );
+
+CREATE INDEX IF NOT EXISTS idx_billers_category ON billers (category);
 
 -- =============================================================================
 -- BILL PAYMENTS
+-- Phase 7: atomic, ledger-backed bill payments with idempotency protection.
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS bill_payments (
   id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  reference           TEXT        NOT NULL,
   user_id             UUID        NOT NULL REFERENCES users (id),
   account_id          UUID        NOT NULL REFERENCES accounts (id),
   biller_id           UUID        NOT NULL REFERENCES billers (id),
+  transaction_id      UUID        REFERENCES transactions (id),
   bill_reference      TEXT        NOT NULL,
   amount_minor_units  BIGINT      NOT NULL CHECK (amount_minor_units > 0),
   currency            CHAR(3)     NOT NULL DEFAULT 'LKR',
   status              TEXT        NOT NULL DEFAULT 'pending'
-                      CHECK (status IN ('pending', 'completed', 'failed')),
-  confirmation_number TEXT,
-  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                      CHECK (status IN ('pending', 'completed', 'failed', 'cancelled')),
+  idempotency_key     TEXT,
+  scheduled_for       TIMESTAMPTZ,
+  paid_at             TIMESTAMPTZ,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT bill_payments_reference_unique UNIQUE (reference)
 );
 
-CREATE INDEX IF NOT EXISTS idx_bill_payments_user_id ON bill_payments (user_id);
+CREATE INDEX IF NOT EXISTS idx_bill_payments_user_created    ON bill_payments (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bill_payments_account_created ON bill_payments (account_id, created_at DESC);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bill_payments_user_idempotency
+  ON bill_payments (user_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
 
 -- =============================================================================
 -- BUDGETS

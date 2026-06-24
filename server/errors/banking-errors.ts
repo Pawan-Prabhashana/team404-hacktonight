@@ -60,3 +60,19 @@ export class CurrencyMismatchError extends BankingError {
     )
   }
 }
+
+// ---------------------------------------------------------------------------
+// Phase 7: bill payment errors
+// ---------------------------------------------------------------------------
+
+export class BillerNotFoundError extends BankingError {
+  constructor() {
+    super('Biller not found or inactive.', 404, 'BILLER_NOT_FOUND')
+  }
+}
+
+export class BillPaymentFailedError extends BankingError {
+  constructor(message = 'Bill payment failed.') {
+    super(message, 400, 'BILL_PAYMENT_FAILED')
+  }
+}

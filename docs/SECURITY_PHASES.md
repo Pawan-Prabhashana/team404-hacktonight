@@ -183,7 +183,35 @@ Kept here to avoid scattering `TODO` comments across every file.
 
 ---
 
-## Phase 7: Smart Spend and SafePay Guardian (TODO)
+## Phase 7: Bill Payment Engine and Bill Radar — Complete ✅
+
+- [x] `billers` and `bill_payments` tables added to the running schema
+- [x] Atomic bill payment service (`withTransaction`, `SELECT ... FOR UPDATE`)
+- [x] Source account ownership verified inside the DB lock (userId from session)
+- [x] Frozen accounts cannot pay bills (`ACCOUNT_FROZEN` error)
+- [x] Insufficient funds rejected atomically (`INSUFFICIENT_FUNDS` error)
+- [x] Negative, zero, and NaN amounts rejected at validation layer (Zod)
+- [x] Idempotency prevents duplicate payments (unique index on user_id + idempotency_key)
+- [x] Each payment writes transaction + ledger entry + bill payment + audit log
+- [x] `bill_payments.reference` (`SRB-BILL-YYYYMMDD-XXXXXX`) generated and stored
+- [x] `transactions.type = 'bill_payment'` tracked and shown in transactions API
+- [x] `/api/billers` protected biller directory (active only, category/search)
+- [x] `/api/bill-payments` GET (history) + POST (pay) — protected, user-scoped
+- [x] `/api/bill-payments/[reference]` receipt endpoint (ownership-scoped)
+- [x] Pay Bills UI rebuilt — real API, account select, review, success receipt
+- [x] Bill Radar preview (rule-based recurring detection, not AI)
+- [x] Dashboard shows recent bills + bill payments in transactions
+- [x] `BILL_PAYMENT_ENGINE_CHECKLIST.md` created
+
+**NOT implemented in Phase 7 (deferred):**
+- Full Smart Spend analytics engine (Phase 8)
+- Full SafePay Guardian fraud engine
+- Statement PDF/CSV export
+- Real external payment gateway / SMS / email confirmations
+
+---
+
+## Phase 8: Smart Spend Analytics Engine (TODO)
 
 - Spending categorization, budget alerts, cashflow forecast
 - Risk scoring engine: velocity checks, unusual amounts, new recipients

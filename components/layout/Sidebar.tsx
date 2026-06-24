@@ -5,12 +5,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import UserMenu from '@/components/auth/UserMenu'
 
-type IconProps = { size?: number; stroke?: string }
-
-const DashboardIcon = ({ size = 18 }: IconProps) => (
+const DashboardIcon = () => (
   <svg
-    width={size}
-    height={size}
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -18,17 +16,17 @@ const DashboardIcon = ({ size = 18 }: IconProps) => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <rect x="3" y="3" width="7" height="7" rx="1" />
-    <rect x="14" y="3" width="7" height="7" rx="1" />
-    <rect x="3" y="14" width="7" height="7" rx="1" />
-    <rect x="14" y="14" width="7" height="7" rx="1" />
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
   </svg>
 )
 
-const AccountsIcon = ({ size = 18 }: IconProps) => (
+const AccountsIcon = () => (
   <svg
-    width={size}
-    height={size}
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -41,10 +39,10 @@ const AccountsIcon = ({ size = 18 }: IconProps) => (
   </svg>
 )
 
-const TransferIcon = ({ size = 18 }: IconProps) => (
+const TransferIcon = () => (
   <svg
-    width={size}
-    height={size}
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -57,10 +55,10 @@ const TransferIcon = ({ size = 18 }: IconProps) => (
   </svg>
 )
 
-const BillsIcon = ({ size = 18 }: IconProps) => (
+const BillsIcon = () => (
   <svg
-    width={size}
-    height={size}
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -72,14 +70,13 @@ const BillsIcon = ({ size = 18 }: IconProps) => (
     <polyline points="14 2 14 8 20 8" />
     <line x1="16" y1="13" x2="8" y2="13" />
     <line x1="16" y1="17" x2="8" y2="17" />
-    <polyline points="10 9 9 9 8 9" />
   </svg>
 )
 
-const SmartSpendIcon = ({ size = 18 }: IconProps) => (
+const SmartSpendIcon = () => (
   <svg
-    width={size}
-    height={size}
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -91,10 +88,10 @@ const SmartSpendIcon = ({ size = 18 }: IconProps) => (
   </svg>
 )
 
-const StatementIcon = ({ size = 18 }: IconProps) => (
+const StatementIcon = () => (
   <svg
-    width={size}
-    height={size}
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -108,14 +105,29 @@ const StatementIcon = ({ size = 18 }: IconProps) => (
   </svg>
 )
 
-const SecurityIcon = ({ size = 18 }: IconProps) => (
+const SecurityIcon = () => (
   <svg
-    width={size}
-    height={size}
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+)
+
+const ShieldIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
@@ -137,24 +149,10 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside
-      style={{
-        width: 260,
-        minHeight: '100vh',
-        background: 'var(--serandib-navy)',
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        borderRight: '1px solid rgba(56, 189, 248, 0.1)',
-        boxShadow: '4px 0 24px rgba(6, 26, 64, 0.25)'
-      }}
-    >
+    <aside className="sidebar-root">
       {/* Logo */}
-      <div
-        className="flex items-center gap-3 px-5 py-6"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
-      >
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl">
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-icon">
           <Image
             src="/brand/serandib-logo.png"
             alt="Serandib Bank"
@@ -164,17 +162,13 @@ export default function Sidebar() {
           />
         </div>
         <div>
-          <p className="text-sm font-bold text-white leading-tight">
-            Serandib Bank
-          </p>
-          <p className="text-xs" style={{ color: 'rgba(56,189,248,0.7)' }}>
-            Digital Banking
-          </p>
+          <p className="sidebar-brand-name">Serandib Bank</p>
+          <p className="sidebar-brand-sub">Digital Banking</p>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="sidebar-nav">
         {menuItems.map(({ label, path, Icon }) => {
           const active = pathname === path || pathname.startsWith(`${path}/`)
           return (
@@ -183,45 +177,21 @@ export default function Sidebar() {
               href={path}
               className={`sidebar-item${active ? ' active' : ''}`}
             >
-              <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                style={{
-                  background: active
-                    ? 'rgba(56, 189, 248, 0.2)'
-                    : 'rgba(255, 255, 255, 0.06)'
-                }}
-              >
-                <Icon size={16} />
+              <span className={`sidebar-item-icon${active ? ' active' : ''}`}>
+                <Icon />
               </span>
-              {label}
+              <span>{label}</span>
             </Link>
           )
         })}
       </nav>
 
       {/* Footer */}
-      <div className="px-3 pb-4 space-y-3">
-        <div
-          className="rounded-xl px-3 py-2.5 flex items-center gap-2"
-          style={{
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.2)'
-          }}
-        >
-          <span className="text-base">🛡</span>
+      <div className="sidebar-footer">
+        <div className="sidebar-shield-badge">
+          <ShieldIcon />
           <div>
-            <p
-              className="text-xs font-semibold"
-              style={{ color: 'rgba(110, 231, 183, 0.9)' }}
-            >
-              Protected by
-            </p>
-            <p
-              className="text-xs font-bold"
-              style={{ color: 'rgba(110, 231, 183, 0.9)' }}
-            >
-              Serandib Shield
-            </p>
+            <p className="sidebar-shield-label">Protected by Serandib Shield</p>
           </div>
         </div>
         <UserMenu />

@@ -2,128 +2,135 @@ import Link from 'next/link'
 import AppShell from '@/components/layout/AppShell'
 
 const categories = [
+  { label: 'Groceries', pct: 28, color: '#0d9488', amount: '13,496' },
+  { label: 'Utilities', pct: 22, color: '#0f766e', amount: '10,604' },
+  { label: 'Dining', pct: 18, color: '#06b6d4', amount: '8,676' },
+  { label: 'Transport', pct: 14, color: '#6366f1', amount: '6,748' },
+  { label: 'Shopping', pct: 10, color: '#10b981', amount: '4,820' },
+  { label: 'Other', pct: 8, color: '#94a3b8', amount: '3,856' }
+]
+
+const insights = [
   {
-    label: 'Groceries',
-    pct: 28,
-    color: 'var(--serandib-blue)',
-    amount: '13,496'
+    text: 'Your utility payments are trending 12% above last month.',
+    tag: 'Heads up',
+    tagColor: '#b45309',
+    tagBg: 'rgba(245,158,11,0.1)'
   },
   {
-    label: 'Utilities',
-    pct: 22,
-    color: 'var(--serandib-sky)',
-    amount: '10,604'
-  },
-  { label: 'Dining', pct: 18, color: 'var(--serandib-cyan)', amount: '8,676' },
-  {
-    label: 'Transport',
-    pct: 14,
-    color: 'var(--serandib-indigo)',
-    amount: '6,748'
+    text: 'Dining spending is LKR 2,100 above your usual baseline.',
+    tag: 'Heads up',
+    tagColor: '#b45309',
+    tagBg: 'rgba(245,158,11,0.1)'
   },
   {
-    label: 'Shopping',
-    pct: 10,
-    color: 'var(--serandib-success)',
-    amount: '4,820'
+    text: 'Setting a weekly savings transfer could add LKR 6,500/month.',
+    tag: 'Tip',
+    tagColor: '#087f7a',
+    tagBg: 'rgba(8,127,122,0.1)'
   },
-  { label: 'Other', pct: 8, color: 'var(--serandib-muted)', amount: '3,856' }
+  {
+    text: 'Transport costs are down 8% compared to last quarter.',
+    tag: 'Positive',
+    tagColor: '#059669',
+    tagBg: 'rgba(16,185,129,0.1)'
+  }
 ]
 
 const modules = [
   {
-    icon: '📈',
     name: 'Cashflow Forecast',
     desc: 'Predict your end-of-month balance based on spending patterns.'
   },
   {
-    icon: '🔁',
     name: 'Subscription Detector',
     desc: 'Auto-detect recurring charges across all accounts.'
   },
   {
-    icon: '🧠',
     name: 'Financial Twin Simulator',
     desc: 'Simulate decisions risk-free before they affect your balance.'
   },
   {
-    icon: '🔔',
     name: 'Budget Alerts',
     desc: 'Get notified before you exceed a category budget.'
   },
   {
-    icon: '🏷️',
     name: 'Auto Categorization',
     desc: 'Every transaction tagged automatically with ML-ready data.'
   }
 ]
 
-const insights = [
-  {
-    icon: '📊',
-    text: 'Your utility payments are trending 12% above last month.',
-    type: 'warn'
-  },
-  {
-    icon: '🍽️',
-    text: 'Dining spending is LKR 2,100 above your usual baseline.',
-    type: 'warn'
-  },
-  {
-    icon: '💡',
-    text: 'Setting a weekly savings transfer could add LKR 6,500/month.',
-    type: 'info'
-  },
-  {
-    icon: '✓',
-    text: 'Transport costs are down 8% compared to last quarter.',
-    type: 'good'
-  }
-]
-
 export default function SmartSpendPage() {
   return (
-    <AppShell>
-      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1
-            className="text-2xl font-extrabold"
-            style={{ color: 'var(--serandib-navy)' }}
-          >
-            Smart Spend
-          </h1>
-          <p
-            className="mt-1 text-sm"
-            style={{ color: 'var(--serandib-muted)' }}
-          >
-            AI-ready financial insights, budget tracking, and cashflow
-            intelligence
-          </p>
-        </div>
-
-        {/* Score + Summary row */}
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Health score ring */}
+    <AppShell
+      title="Smart Spend"
+      subtitle="Spending intelligence, budgets, and cashflow insight"
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        {/* Top metrics */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem'
+          }}
+        >
+          {/* Score card */}
           <div
-            className="col-span-full sm:col-span-1 rounded-2xl p-5 text-white flex flex-col justify-between"
+            className="app-card-dark"
             style={{
-              background:
-                'linear-gradient(135deg, var(--serandib-navy) 0%, var(--serandib-indigo) 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
               minHeight: 160
             }}
           >
-            <p className="text-sm font-medium text-white/60">
+            <p
+              style={{
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.55)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.07em',
+                fontWeight: 700
+              }}
+            >
               Financial Health
             </p>
             <div>
-              <p className="text-5xl font-extrabold">74</p>
-              <p className="text-xs text-white/50 mt-1">/ 100 · Good</p>
+              <p
+                style={{
+                  fontSize: '3.5rem',
+                  fontWeight: 800,
+                  lineHeight: 1,
+                  letterSpacing: '-0.04em'
+                }}
+              >
+                74
+              </p>
+              <p
+                style={{
+                  fontSize: '0.8125rem',
+                  color: 'rgba(255,255,255,0.5)',
+                  marginTop: '0.25rem'
+                }}
+              >
+                / 100 · Good
+              </p>
             </div>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-white/15">
+            <div
+              style={{
+                height: 6,
+                borderRadius: 9999,
+                background: 'rgba(255,255,255,0.15)'
+              }}
+            >
               <div
-                className="h-full rounded-full"
-                style={{ width: '74%', background: 'var(--serandib-sky)' }}
+                style={{
+                  height: '100%',
+                  borderRadius: 9999,
+                  background: 'rgba(255,255,255,0.7)',
+                  width: '74%'
+                }}
               />
             </div>
           </div>
@@ -133,85 +140,89 @@ export default function SmartSpendPage() {
               label: 'Monthly Spend',
               value: 'Rs. 48,200',
               sub: 'All categories',
-              icon: '💳',
-              bg: 'rgba(10,99,255,0.06)'
+              color: '#087f7a',
+              bg: '#f0faf9'
             },
             {
               label: 'Savings Potential',
               value: 'Rs. 6,500',
               sub: 'Based on patterns',
-              icon: '💰',
-              bg: 'rgba(16,185,129,0.06)'
+              color: '#059669',
+              bg: 'rgba(16,185,129,0.05)'
             },
             {
               label: 'Avg Daily Spend',
               value: 'Rs. 1,606',
               sub: '30-day average',
-              icon: '📅',
-              bg: 'rgba(245,158,11,0.06)'
+              color: '#b45309',
+              bg: 'rgba(245,158,11,0.05)'
             }
           ].map((c) => (
             <div
               key={c.label}
-              className="rounded-2xl p-5"
+              className="app-stat-card"
               style={{
                 background: c.bg,
-                border: '1px solid var(--serandib-border)'
+                border: `1px solid ${c.bg === '#f0faf9' ? '#cceae8' : '#e7edf1'}`
               }}
             >
-              <p className="text-2xl mb-2">{c.icon}</p>
-              <p
-                className="text-xs font-medium"
-                style={{ color: 'var(--serandib-muted)' }}
-              >
-                {c.label}
-              </p>
-              <p
-                className="mt-1 text-2xl font-extrabold"
-                style={{ color: 'var(--serandib-navy)' }}
-              >
+              <p className="app-stat-label">{c.label}</p>
+              <p className="app-stat-value" style={{ color: c.color }}>
                 {c.value}
               </p>
-              <p
-                className="text-xs mt-0.5"
-                style={{ color: 'var(--serandib-muted)' }}
-              >
-                {c.sub}
-              </p>
+              <p className="app-stat-sub">{c.sub}</p>
             </div>
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          {/* Category breakdown */}
-          <div className="lg:col-span-3">
-            <div className="serandib-card p-6">
-              <h2
-                className="mb-4 font-bold"
-                style={{ color: 'var(--serandib-navy)' }}
+        {/* Main 2-column */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0,1.5fr) minmax(300px,0.8fr)',
+            gap: '1.5rem',
+            alignItems: 'start'
+          }}
+        >
+          {/* Left */}
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+          >
+            {/* Category breakdown */}
+            <div className="app-card">
+              <h2 className="app-section-title">Category Breakdown</h2>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem'
+                }}
               >
-                Category Breakdown
-              </h2>
-              <div className="space-y-3">
                 {categories.map((c) => (
                   <div key={c.label}>
-                    <div className="mb-1 flex items-center justify-between text-sm">
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginBottom: '0.375rem'
+                      }}
+                    >
                       <span
-                        className="font-medium"
-                        style={{ color: 'var(--foreground)' }}
+                        style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#10202b'
+                        }}
                       >
                         {c.label}
                       </span>
-                      <span style={{ color: 'var(--serandib-muted)' }}>
+                      <span style={{ fontSize: '0.875rem', color: '#6b7a90' }}>
                         Rs. {c.amount} · {c.pct}%
                       </span>
                     </div>
-                    <div
-                      className="h-2 w-full rounded-full"
-                      style={{ background: 'rgba(10,99,255,0.08)' }}
-                    >
+                    <div className="app-progress-bar">
                       <div
-                        className="h-full rounded-full transition-all duration-700"
+                        className="app-progress-fill"
                         style={{ width: `${c.pct}%`, background: c.color }}
                       />
                     </div>
@@ -221,51 +232,50 @@ export default function SmartSpendPage() {
             </div>
 
             {/* Spending insights */}
-            <div className="mt-4 serandib-card p-5">
-              <h2
-                className="mb-3 font-bold"
-                style={{ color: 'var(--serandib-navy)' }}
+            <div className="app-card">
+              <h2 className="app-section-title">Spending Insights</h2>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.875rem'
+                }}
               >
-                Spending Insights
-              </h2>
-              <div className="space-y-2">
                 {insights.map((i) => (
                   <div
                     key={i.text}
-                    className="flex items-start gap-3 rounded-xl p-3"
-                    style={{ background: 'rgba(10,99,255,0.03)' }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '1rem',
+                      padding: '0.875rem 1rem',
+                      borderRadius: '0.875rem',
+                      background: '#fafcfc',
+                      border: '1px solid #f1f5f8'
+                    }}
                   >
-                    <span className="text-lg shrink-0">{i.icon}</span>
                     <p
-                      className="text-sm"
-                      style={{ color: 'var(--foreground)' }}
+                      style={{
+                        fontSize: '0.875rem',
+                        color: '#374151',
+                        flex: 1,
+                        lineHeight: 1.6
+                      }}
                     >
                       {i.text}
                     </p>
                     <span
-                      className="serandib-pill ml-auto shrink-0 text-xs"
-                      style={
-                        i.type === 'good'
-                          ? {
-                              background: 'rgba(16,185,129,0.1)',
-                              color: 'var(--serandib-success)'
-                            }
-                          : i.type === 'warn'
-                            ? {
-                                background: 'rgba(245,158,11,0.1)',
-                                color: 'var(--serandib-warning)'
-                              }
-                            : {
-                                background: 'rgba(10,99,255,0.1)',
-                                color: 'var(--serandib-blue)'
-                              }
-                      }
+                      style={{
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: 9999,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        background: i.tagBg,
+                        color: i.tagColor,
+                        flexShrink: 0
+                      }}
                     >
-                      {i.type === 'good'
-                        ? 'Positive'
-                        : i.type === 'warn'
-                          ? 'Heads up'
-                          : 'Tip'}
+                      {i.tag}
                     </span>
                   </div>
                 ))}
@@ -273,63 +283,115 @@ export default function SmartSpendPage() {
             </div>
           </div>
 
-          {/* Right column */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Right */}
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+          >
             {/* Financial Twin */}
-            <div
-              className="rounded-2xl p-5 text-white"
-              style={{
-                background:
-                  'linear-gradient(135deg, #1e1b4b 0%, var(--serandib-indigo) 100%)',
-                boxShadow: '0 4px 20px rgba(40,55,194,0.25)'
-              }}
-            >
-              <div className="mb-3 flex items-center gap-2">
-                <span className="text-2xl">🧠</span>
-                <p className="font-bold">Financial Twin Simulator</p>
-              </div>
-              <p className="text-sm text-white/60 leading-relaxed">
+            <div className="app-card-dark">
+              <p
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255,255,255,0.55)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                  fontWeight: 700,
+                  marginBottom: '0.875rem'
+                }}
+              >
+                Financial Twin Simulator
+              </p>
+              <p
+                style={{
+                  fontSize: '0.9375rem',
+                  color: 'rgba(255,255,255,0.72)',
+                  lineHeight: 1.65,
+                  marginBottom: '1rem'
+                }}
+              >
                 Simulate purchases, savings plans, and payments before they
                 affect your real balance.
               </p>
               <span
-                className="mt-3 inline-block serandib-pill text-xs"
+                className="app-pill"
                 style={{
-                  background: 'rgba(255,255,255,0.1)',
-                  color: 'rgba(255,255,255,0.7)'
+                  background: 'rgba(255,255,255,0.12)',
+                  color: 'rgba(255,255,255,0.75)'
                 }}
               >
-                Coming in Phase 6
+                Coming in Phase 7
               </span>
             </div>
 
             {/* Intelligence modules */}
-            <div className="serandib-card p-5">
-              <h3
-                className="mb-3 font-bold text-sm"
-                style={{ color: 'var(--serandib-navy)' }}
+            <div className="app-card">
+              <h3 className="app-section-title">Intelligence Modules</h3>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem'
+                }}
               >
-                Intelligence Modules
-              </h3>
-              <div className="space-y-2.5">
                 {modules.map((m) => (
-                  <div key={m.name} className="flex items-start gap-3">
-                    <span className="text-lg shrink-0">{m.icon}</span>
-                    <div>
+                  <div
+                    key={m.name}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.875rem'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '0.625rem',
+                        background: '#f0faf9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#087f7a"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <p
-                        className="text-xs font-semibold"
-                        style={{ color: 'var(--serandib-navy)' }}
+                        style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#071f2a'
+                        }}
                       >
                         {m.name}
                       </p>
                       <p
-                        className="text-xs"
-                        style={{ color: 'var(--serandib-muted)' }}
+                        style={{
+                          fontSize: '0.8rem',
+                          color: '#6b7a90',
+                          marginTop: '0.125rem',
+                          lineHeight: 1.5
+                        }}
                       >
                         {m.desc}
                       </p>
                     </div>
-                    <span className="serandib-pill serandib-pill-blue ml-auto shrink-0 text-xs">
+                    <span
+                      className="app-pill app-pill-teal"
+                      style={{ flexShrink: 0 }}
+                    >
                       Soon
                     </span>
                   </div>
@@ -339,13 +401,19 @@ export default function SmartSpendPage() {
 
             <Link
               href="/dashboard"
-              className="serandib-button-secondary block text-center py-2.5 text-sm"
+              className="app-button-secondary"
+              style={{
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
               ← Back to Dashboard
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     </AppShell>
   )
 }
