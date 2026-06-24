@@ -1,443 +1,395 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import AppShell from '@/components/layout/AppShell'
-import {
-  fetchAccounts,
-  type SafeAccount,
-  updateAccount
-} from '@/lib/banking-client'
+import EmptyState from '@/components/ui/EmptyState'
+import LoadingState from '@/components/ui/LoadingState'
+import { fetchAccounts, type SafeAccount } from '@/lib/banking-client'
 
-function AccountCard({
-  account,
-  updating,
-  onToggleFreeze,
-  onEditNickname
-}: {
-  account: SafeAccount
-  updating: boolean
-  onToggleFreeze: (a: SafeAccount) => void
-  onEditNickname: (a: SafeAccount) => void
-}) {
+const CardIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <line x1="2" y1="10" x2="22" y2="10" />
+  </svg>
+)
+const LockIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+)
+const SendIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </svg>
+)
+const HistoryIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="1 4 1 10 7 10" />
+    <path d="M3.51 15a9 9 0 1 0 .49-4.98" />
+  </svg>
+)
+const CheckIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+)
+const ShieldIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+)
+
+function AccountCard({ account }: { account: SafeAccount }) {
   const isFrozen = account.status === 'frozen'
 
   return (
     <div
-      className="rounded-2xl p-5"
       style={{
-        background: isFrozen
-          ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)'
-          : 'linear-gradient(135deg, var(--serandib-navy) 0%, var(--serandib-indigo) 100%)',
-        color: 'white',
-        boxShadow: '0 8px 24px rgba(6,26,64,0.2)',
-        opacity: isFrozen ? 0.85 : 1
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0,
+        borderRadius: '1.5rem',
+        overflow: 'hidden',
+        border: '1px solid #e7edf1'
       }}
     >
-      <div className="mb-4 flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">
-            {account.accountName}
-          </p>
-          <p className="mt-0.5 text-lg font-bold">
-            {account.nickname || 'Account'}
-          </p>
-        </div>
-        <span
-          className="serandib-pill text-xs"
-          style={
-            isFrozen
-              ? { background: 'rgba(239,68,68,0.2)', color: '#fca5a5' }
-              : { background: 'rgba(16,185,129,0.2)', color: '#6ee7b7' }
-          }
-        >
-          {isFrozen ? '🔒 Frozen' : '✓ Active'}
-        </span>
-      </div>
-
-      <p className="mb-1 text-sm font-mono text-white/50">
-        {account.accountNumberMasked}
-      </p>
-      <p className="text-3xl font-extrabold">
-        {account.currency}{' '}
-        {(account.balanceMinorUnits / 100).toLocaleString('en-US', {
-          minimumFractionDigits: 2
-        })}
-      </p>
-
-      <div className="mt-5 flex gap-2">
-        <button
-          type="button"
-          disabled={updating}
-          onClick={() => onToggleFreeze(account)}
-          className="flex-1 rounded-xl py-2 text-xs font-semibold transition-all disabled:opacity-50"
-          style={
-            isFrozen
-              ? {
-                  background: 'rgba(16,185,129,0.2)',
-                  color: '#6ee7b7',
-                  border: '1px solid rgba(16,185,129,0.3)'
-                }
-              : {
-                  background: 'rgba(239,68,68,0.2)',
-                  color: '#fca5a5',
-                  border: '1px solid rgba(239,68,68,0.3)'
-                }
-          }
-        >
-          {updating
-            ? '…'
-            : isFrozen
-              ? '🔓 Unfreeze Account'
-              : '🔒 Freeze Account'}
-        </button>
-        <button
-          type="button"
-          onClick={() => onEditNickname(account)}
-          className="rounded-xl px-3 py-2 text-xs font-semibold transition-all"
+      {/* Card header with gradient */}
+      <div
+        style={{
+          padding: '1.75rem 2rem',
+          background: isFrozen
+            ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)'
+            : 'linear-gradient(135deg, #071f2a 0%, #0d9488 100%)',
+          color: '#fff',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
+        <div
           style={{
-            background: 'rgba(255,255,255,0.1)',
-            color: 'white',
-            border: '1px solid rgba(255,255,255,0.15)'
+            position: 'absolute',
+            bottom: -20,
+            right: -20,
+            width: 100,
+            height: 100,
+            background: 'rgba(255,255,255,0.04)',
+            borderRadius: '50%',
+            pointerEvents: 'none'
           }}
-        >
-          ✏ Edit
-        </button>
-      </div>
-
-      {/* Send / View transactions */}
-      <div className="mt-2 flex gap-2">
-        <a
-          href="/bank-transfer"
-          className="flex-1 rounded-xl py-2 text-center text-xs font-semibold transition-all"
-          style={{
-            background: isFrozen
-              ? 'rgba(255,255,255,0.05)'
-              : 'rgba(255,255,255,0.15)',
-            color: isFrozen ? 'rgba(255,255,255,0.35)' : 'white',
-            border: '1px solid rgba(255,255,255,0.15)',
-            pointerEvents: isFrozen ? 'none' : 'auto',
-            cursor: isFrozen ? 'not-allowed' : 'pointer'
-          }}
-        >
-          ⬆ Send Money
-        </a>
-        <a
-          href="/transactions"
-          className="rounded-xl px-3 py-2 text-xs font-semibold transition-all"
-          style={{
-            background: 'rgba(255,255,255,0.1)',
-            color: 'white',
-            border: '1px solid rgba(255,255,255,0.15)'
-          }}
-        >
-          📋 History
-        </a>
-      </div>
-    </div>
-  )
-}
-
-function NicknameModal({
-  account,
-  onClose,
-  onSave
-}: {
-  account: SafeAccount
-  onClose: () => void
-  onSave: (id: number, nick: string) => Promise<void>
-}) {
-  const [nick, setNick] = useState(account.nickname || '')
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState('')
-
-  async function handleSave() {
-    if (!nick.trim()) {
-      setErr('Nickname cannot be empty')
-      return
-    }
-    setBusy(true)
-    try {
-      await onSave(account.id, nick.trim())
-      onClose()
-    } catch (e) {
-      setErr((e as Error).message)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(6,26,64,0.5)', backdropFilter: 'blur(6px)' }}
-    >
-      <div className="serandib-card w-full max-w-sm p-6">
-        <h3
-          className="mb-4 text-lg font-bold"
-          style={{ color: 'var(--serandib-navy)' }}
-        >
-          Edit Account Name
-        </h3>
-        <input
-          value={nick}
-          onChange={(e) => setNick(e.target.value)}
-          className="serandib-input mb-3"
-          placeholder="e.g. My Savings"
-          maxLength={40}
         />
-        {err && (
-          <p
-            className="mb-2 text-xs"
-            style={{ color: 'var(--serandib-danger)' }}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between'
+          }}
+        >
+          <div>
+            <p
+              style={{
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.55)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontWeight: 700,
+                marginBottom: '0.375rem'
+              }}
+            >
+              {account.accountName?.includes('Savings') ? 'Savings Account' : account.accountName?.includes('Expense') ? 'Expense Account' : 'Account'}
+            </p>
+            <p
+              style={{
+                fontSize: '1.125rem',
+                fontWeight: 700,
+                letterSpacing: '-0.01em'
+              }}
+            >
+              {account.nickname || account.accountName}
+            </p>
+            <p
+              style={{
+                fontSize: '0.875rem',
+                color: 'rgba(255,255,255,0.55)',
+                marginTop: '0.25rem',
+                fontFamily: 'monospace',
+                letterSpacing: '0.06em'
+              }}
+            >
+              {account.accountNumberMasked}
+            </p>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.12)'
+            }}
           >
-            {err}
-          </p>
-        )}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="serandib-button-secondary flex-1 py-2 text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={busy}
-            className="serandib-button-primary flex-1 py-2 text-sm disabled:opacity-60"
-          >
-            {busy ? 'Saving…' : 'Save'}
-          </button>
+            {isFrozen ? <LockIcon /> : <CardIcon />}
+          </div>
         </div>
+        <div style={{ marginTop: '1.25rem' }}>
+          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
+            Available Balance
+          </p>
+          <p
+            style={{
+              fontSize: '2rem',
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              lineHeight: 1.15,
+              marginTop: '0.125rem'
+            }}
+          >
+            {account.currency}{' '}
+            {(account.balanceMinorUnits / 100).toLocaleString('en-US', {
+              minimumFractionDigits: 2
+            })}
+          </p>
+        </div>
+        <div style={{ marginTop: '1rem' }}>
+          <span
+            className={`app-pill ${isFrozen ? 'app-pill-yellow' : 'app-pill-green'}`}
+            style={{
+              background: isFrozen
+                ? 'rgba(245,158,11,0.2)'
+                : 'rgba(16,185,129,0.2)',
+              color: '#fff'
+            }}
+          >
+            {isFrozen ? <LockIcon /> : <CheckIcon />} {account.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Actions bar */}
+      <div
+        style={{
+          background: '#fff',
+          padding: '1rem 1.5rem',
+          display: 'flex',
+          gap: '0.75rem',
+          flexWrap: 'wrap'
+        }}
+      >
+        <Link
+          href={`/bank-transfer?from=${account.id}`}
+          className={`app-button-primary${isFrozen ? ' disabled' : ''}`}
+          style={{
+            height: 38,
+            padding: '0 1.125rem',
+            fontSize: '0.8125rem',
+            pointerEvents: isFrozen ? 'none' : undefined,
+            opacity: isFrozen ? 0.4 : 1
+          }}
+          aria-disabled={isFrozen}
+        >
+          <SendIcon /> Send Money
+        </Link>
+        <Link
+          href={`/e-statement?account=${account.id}`}
+          className="app-button-ghost"
+          style={{ height: 38, padding: '0 1.125rem', fontSize: '0.8125rem' }}
+        >
+          <HistoryIcon /> History
+        </Link>
       </div>
     </div>
   )
 }
 
 export default function BankAccountsPage() {
-  const router = useRouter()
   const [accounts, setAccounts] = useState<SafeAccount[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [updatingId, setUpdatingId] = useState<number | null>(null)
-  const [editAccount, setEditAccount] = useState<SafeAccount | null>(null)
-
-  const loadAccounts = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      setAccounts(await fetchAccounts())
-    } catch (err) {
-      const msg = (err as Error).message
-      if (msg.includes('authenticated'))
-        router.push('/login?next=/bank-accounts')
-      else setError(msg)
-    } finally {
-      setLoading(false)
-    }
-  }, [router])
 
   useEffect(() => {
-    loadAccounts()
-  }, [loadAccounts])
-
-  async function toggleFreeze(account: SafeAccount) {
-    setUpdatingId(account.id)
-    try {
-      const next = account.status === 'active' ? 'frozen' : 'active'
-      const updated = await updateAccount({
-        accountId: account.id,
-        status: next
-      })
-      setAccounts((prev) =>
-        prev.map((a) =>
-          a.id === account.id ? { ...a, status: updated.status } : a
-        )
-      )
-    } catch (err) {
-      alert((err as Error).message)
-    } finally {
-      setUpdatingId(null)
-    }
-  }
-
-  async function saveNickname(id: number, nickname: string) {
-    const updated = await updateAccount({ accountId: id, nickname })
-    setAccounts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, nickname: updated.nickname } : a))
-    )
-  }
+    fetchAccounts()
+      .then(setAccounts)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
   const totalBalance = accounts.reduce((s, a) => s + a.balanceMinorUnits, 0)
   const activeCount = accounts.filter((a) => a.status === 'active').length
   const frozenCount = accounts.filter((a) => a.status === 'frozen').length
+  const currency = accounts[0]?.currency ?? 'LKR'
 
   return (
-    <AppShell>
-      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1
-            className="text-2xl font-extrabold"
-            style={{ color: 'var(--serandib-navy)' }}
-          >
-            My Accounts
-          </h1>
-          <p
-            className="mt-1 text-sm"
-            style={{ color: 'var(--serandib-muted)' }}
-          >
-            Manage your accounts and Account Shield Mode
-          </p>
-        </div>
-
-        {/* Summary row */}
-        {!loading && accounts.length > 0 && (
-          <div className="mb-6 grid grid-cols-3 gap-4">
-            {[
-              {
-                label: 'Total Balance',
-                value: `LKR ${(totalBalance / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-                icon: '💰',
-                color: 'var(--serandib-blue)'
-              },
-              {
-                label: 'Active',
-                value: `${activeCount} account${activeCount !== 1 ? 's' : ''}`,
-                icon: '✓',
-                color: 'var(--serandib-success)'
-              },
-              {
-                label: 'Frozen',
-                value: `${frozenCount} account${frozenCount !== 1 ? 's' : ''}`,
-                icon: '🔒',
-                color:
-                  frozenCount > 0
-                    ? 'var(--serandib-danger)'
-                    : 'var(--serandib-muted)'
-              }
-            ].map((s) => (
-              <div key={s.label} className="serandib-card text-center">
-                <p className="text-2xl mb-1">{s.icon}</p>
-                <p
-                  className="text-xs font-medium"
-                  style={{ color: 'var(--serandib-muted)' }}
-                >
-                  {s.label}
-                </p>
-                <p
-                  className="font-bold text-sm mt-0.5"
-                  style={{ color: s.color }}
-                >
-                  {s.value}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Account Shield info banner */}
+    <AppShell
+      title="My Accounts"
+      subtitle="Manage your accounts and Account Shield Mode"
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        {/* Stat row */}
         <div
-          className="mb-6 rounded-2xl p-4 flex items-start gap-3"
           style={{
-            background: 'rgba(10,99,255,0.06)',
-            border: '1px solid var(--serandib-border)'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '1rem'
           }}
         >
-          <span className="text-2xl">🛡</span>
+          <div className="app-stat-card">
+            <p className="app-stat-label">Total Balance</p>
+            <p
+              className="app-stat-value"
+              style={{ color: '#087f7a', fontSize: '1.25rem' }}
+            >
+              {loading
+                ? '—'
+                : `${currency} ${(totalBalance / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+            </p>
+          </div>
+          <div className="app-stat-card">
+            <p className="app-stat-label">Active</p>
+            <p className="app-stat-value" style={{ color: '#059669' }}>
+              {loading
+                ? '—'
+                : `${activeCount} account${activeCount !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+          <div className="app-stat-card">
+            <p className="app-stat-label">Frozen</p>
+            <p
+              className="app-stat-value"
+              style={{ color: frozenCount > 0 ? '#dc2626' : '#6b7a90' }}
+            >
+              {loading
+                ? '—'
+                : `${frozenCount} account${frozenCount !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+        </div>
+
+        {/* Shield info */}
+        <div
+          className="app-card-soft"
+          style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'rgba(8,127,122,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#087f7a',
+              flexShrink: 0
+            }}
+          >
+            <ShieldIcon />
+          </div>
           <div>
             <p
-              className="font-semibold text-sm"
-              style={{ color: 'var(--serandib-navy)' }}
+              style={{
+                fontWeight: 700,
+                color: '#071f2a',
+                fontSize: '0.9375rem'
+              }}
             >
               Account Shield Mode
             </p>
             <p
-              className="text-xs mt-0.5"
-              style={{ color: 'var(--serandib-muted)' }}
+              style={{
+                color: '#6b7a90',
+                fontSize: '0.875rem',
+                marginTop: '0.25rem',
+                lineHeight: 1.6
+              }}
             >
               Instantly freeze any account to block all outgoing transfers.
-              Unfreeze at any time. Frozen accounts cannot be used as a source
-              for transfers.
+              Frozen accounts cannot send money but can still receive deposits.
+              Unfreeze anytime from the Security Center.
             </p>
           </div>
         </div>
 
-        {/* States */}
-        {loading && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-52 animate-pulse rounded-2xl bg-gray-200"
-              />
-            ))}
+        {/* Accounts grid */}
+        {loading ? (
+          <LoadingState />
+        ) : accounts.length === 0 ? (
+          <div className="app-card">
+            <EmptyState
+              title="No accounts found"
+              description="Your bank accounts will appear here."
+            />
           </div>
-        )}
-
-        {error && (
+        ) : (
           <div
-            className="rounded-2xl p-6 text-center"
             style={{
-              background: 'rgba(239,68,68,0.06)',
-              border: '1px solid rgba(239,68,68,0.2)'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+              gap: '1.25rem'
             }}
           >
-            <p className="text-sm" style={{ color: 'var(--serandib-danger)' }}>
-              {error}
-            </p>
-            <button
-              type="button"
-              onClick={loadAccounts}
-              className="mt-3 serandib-button-secondary text-sm py-2"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && accounts.length === 0 && (
-          <div className="rounded-2xl p-10 text-center serandib-card">
-            <p className="text-3xl mb-3">💳</p>
-            <p
-              className="font-semibold"
-              style={{ color: 'var(--serandib-navy)' }}
-            >
-              No accounts found
-            </p>
-            <p
-              className="text-sm mt-1"
-              style={{ color: 'var(--serandib-muted)' }}
-            >
-              Contact support to open your first account.
-            </p>
-          </div>
-        )}
-
-        {!loading && !error && accounts.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {accounts.map((a) => (
-              <AccountCard
-                key={a.id}
-                account={a}
-                updating={updatingId === a.id}
-                onToggleFreeze={toggleFreeze}
-                onEditNickname={setEditAccount}
-              />
+              <AccountCard key={a.id} account={a} />
             ))}
           </div>
         )}
-      </main>
-
-      {editAccount && (
-        <NicknameModal
-          account={editAccount}
-          onClose={() => setEditAccount(null)}
-          onSave={saveNickname}
-        />
-      )}
+      </div>
     </AppShell>
   )
 }

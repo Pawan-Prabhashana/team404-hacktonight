@@ -15,18 +15,17 @@
 -- ---------------------------------------------------------------------------
 -- BILLERS
 -- ---------------------------------------------------------------------------
-INSERT INTO billers (id, name, code, category, logo_path) VALUES
-  (gen_random_uuid(), 'Water Board',               'water',   'utility',       '/billers/water-board.png'),
-  (gen_random_uuid(), 'Ceylon Electricity Board',  'ceb',     'utility',       '/billers/ceb.png'),
-  (gen_random_uuid(), 'Dialog Axiata',             'dialog',  'telecom',       '/billers/dialog.png'),
-  (gen_random_uuid(), 'Sri Lanka Telecom',         'slt',     'telecom',       '/billers/electricity.png'),
-  (gen_random_uuid(), 'Airtel Lanka',              'airtel',  'telecom',       '/billers/airtel.png'),
-  (gen_random_uuid(), 'LOLC Finance',              'lolc',    'finance',       '/billers/lolc.png'),
-  (gen_random_uuid(), 'AIA Insurance',             'aia',     'insurance',     '/billers/aia.png'),
-  (gen_random_uuid(), 'HSBC',                      'hsbc',    'bank',          '/billers/hsbc.png'),
-  (gen_random_uuid(), 'PEO TV',                    'peotv',   'entertainment', '/billers/mpesa.png'),
-  (gen_random_uuid(), 'Hutch Lanka',               'hutch',   'telecom',       '/billers/hutch.png')
-ON CONFLICT (code) DO NOTHING;
+-- Phase 7: provider_code is the unique conflict target; status replaces is_active.
+INSERT INTO billers (id, name, category, provider_code, logo_url, status) VALUES
+  (gen_random_uuid(), 'CEB Electricity',      'utilities',  'CEB',     '/billers/ceb.png',         'active'),
+  (gen_random_uuid(), 'National Water Board', 'utilities',  'NWSDB',   '/billers/water-board.png', 'active'),
+  (gen_random_uuid(), 'Dialog Mobile',        'mobile',     'DIALOG',  '/billers/dialog.png',      'active'),
+  (gen_random_uuid(), 'SLT Fiber',            'internet',   'SLT',     '/billers/electricity.png', 'active'),
+  (gen_random_uuid(), 'Mobitel',              'mobile',     'MOBITEL', '/billers/hutch.png',       'active'),
+  (gen_random_uuid(), 'AIA Insurance',        'insurance',  'AIA',     '/billers/aia.png',         'active'),
+  (gen_random_uuid(), 'University Payments',  'education',  'UNI',     NULL,                       'active'),
+  (gen_random_uuid(), 'Municipal Council',    'government', 'MUNI',    NULL,                       'active')
+ON CONFLICT (provider_code) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
 -- DEMO USERS
